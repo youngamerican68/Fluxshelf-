@@ -2,14 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
   Zap,
   ImageIcon,
   FileText,
@@ -21,18 +13,29 @@ import {
   Microscope,
   ArrowRight,
   Check,
+  Play,
 } from "lucide-react";
 
-// Wave divider SVG component
-const WaveDivider = ({ flip = false, className = "" }: { flip?: boolean; className?: string }) => (
-  <div className={`w-full overflow-hidden ${flip ? "rotate-180" : ""} ${className}`}>
+// Diagonal divider component
+const DiagonalDivider = ({
+  fromColor = "white",
+  toColor = "primary",
+  flip = false
+}: {
+  fromColor?: string;
+  toColor?: string;
+  flip?: boolean;
+}) => (
+  <div className={`relative h-24 md:h-32 ${flip ? "rotate-180" : ""}`}>
     <svg
-      viewBox="0 0 1200 120"
+      className="absolute inset-0 w-full h-full"
+      viewBox="0 0 100 100"
       preserveAspectRatio="none"
-      className="w-full h-16 md:h-24"
-      fill="hsl(195 60% 96%)"
     >
-      <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" />
+      <polygon
+        points="0,100 100,0 100,100"
+        className={toColor === "primary" ? "fill-primary" : toColor === "white" ? "fill-white" : "fill-muted"}
+      />
     </svg>
   </div>
 );
@@ -110,237 +113,136 @@ const PRICING = [
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-background sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Zap className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold text-foreground">FluxShield</span>
-          </div>
-          <nav className="hidden md:flex items-center gap-8">
-            <Link href="#how-it-works" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              HOW IT WORKS
-            </Link>
-            <Link href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              PRICING
-            </Link>
-            <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              LOG IN
-            </Link>
-            <Link href="/signup">
-              <Button className="rounded-full px-6">GET STARTED FREE</Button>
-            </Link>
-          </nav>
-          <div className="md:hidden flex items-center gap-4">
-            <Link href="/login">
-              <Button variant="ghost" size="sm">Log in</Button>
-            </Link>
-            <Link href="/signup">
-              <Button size="sm" className="rounded-full">Get Started</Button>
-            </Link>
-          </div>
+      {/* Hero with photo background */}
+      <section className="relative min-h-[90vh] flex items-center">
+        {/* Background image with gradient overlay */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1920&q=80"
+            alt="Marketing workspace"
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/80 to-accent/70"></div>
         </div>
-      </header>
 
-      {/* Hero */}
-      <section className="container mx-auto px-4 py-16 md:py-24">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
-          <div className="text-left">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground mb-6 leading-tight">
-              Create stunning
-              <br />
-              <span className="text-primary">campaign packs</span> in a snap.
-            </h1>
-            <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-              Whip up product images for social media, ads, and more—even if you&apos;re not a graphic designer.
-            </p>
-            <Link href="/signup">
-              <Button size="lg" className="rounded-full px-8 py-6 text-base font-semibold uppercase tracking-wide">
-                Get Started Free
-              </Button>
-            </Link>
+        {/* Header - overlaid on hero */}
+        <header className="absolute top-0 left-0 right-0 z-20">
+          <div className="container mx-auto px-4 py-6 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Zap className="h-8 w-8 text-white" />
+              <span className="text-xl font-bold text-white">FluxShield</span>
+            </div>
+            <nav className="hidden md:flex items-center gap-8">
+              <Link href="#how-it-works" className="text-sm font-medium text-white/80 hover:text-white transition-colors">
+                How It Works
+              </Link>
+              <Link href="#pricing" className="text-sm font-medium text-white/80 hover:text-white transition-colors">
+                Pricing
+              </Link>
+              <Link href="/login" className="text-sm font-medium text-white/80 hover:text-white transition-colors">
+                Log in
+              </Link>
+              <Link href="/signup">
+                <Button className="bg-white text-primary hover:bg-white/90 font-semibold px-6">
+                  Get Started Free
+                </Button>
+              </Link>
+            </nav>
+            <div className="md:hidden flex items-center gap-4">
+              <Link href="/login">
+                <Button variant="ghost" size="sm" className="text-white">Log in</Button>
+              </Link>
+              <Link href="/signup">
+                <Button size="sm" className="bg-white text-primary">Get Started</Button>
+              </Link>
+            </div>
           </div>
-          <div className="relative">
-            {/* Product mockup placeholder - layered cards effect */}
-            <div className="relative">
-              <div className="absolute -top-4 -right-4 w-full h-full bg-primary/10 rounded-2xl"></div>
-              <div className="absolute -top-2 -right-2 w-full h-full bg-primary/20 rounded-2xl"></div>
-              <div className="relative bg-white rounded-2xl shadow-2xl p-6 border">
-                <div className="flex items-center gap-2 mb-4 pb-4 border-b">
+        </header>
+
+        {/* Hero content */}
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="text-left text-white">
+              <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 leading-tight">
+                Show your products.
+                <br />
+                See results.
+              </h1>
+              <p className="text-xl text-white/90 mb-8 leading-relaxed max-w-lg">
+                Create stunning marketing campaigns with AI. Perfect for{" "}
+                <span className="underline decoration-2 underline-offset-4">e-commerce</span>,{" "}
+                <span className="underline decoration-2 underline-offset-4">social media</span>, and more!
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Link href="/signup">
+                  <Button size="lg" className="bg-white text-primary hover:bg-white/90 font-bold px-8 py-6 text-base uppercase tracking-wide">
+                    Download Now
+                    <span className="block text-xs font-normal normal-case">For Free</span>
+                  </Button>
+                </Link>
+                <Link href="#how-it-works">
+                  <Button size="lg" variant="outline" className="border-white/50 text-white hover:bg-white/10 px-8 py-6 text-base">
+                    <Play className="h-5 w-5 mr-2" />
+                    See How It Works
+                  </Button>
+                </Link>
+              </div>
+            </div>
+            <div className="relative hidden md:block">
+              {/* Product mockup */}
+              <div className="relative bg-white rounded-xl shadow-2xl p-4 transform rotate-2 hover:rotate-0 transition-transform">
+                <div className="flex items-center gap-2 mb-3 pb-3 border-b">
                   <div className="w-3 h-3 rounded-full bg-red-400"></div>
                   <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
                   <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                  <span className="ml-4 text-sm text-muted-foreground">FluxShield Campaign</span>
                 </div>
-                <div className="grid grid-cols-3 gap-3">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={i} className="aspect-square bg-gradient-to-br from-primary/20 to-primary/40 rounded-lg flex items-center justify-center">
-                      <ImageIcon className="h-8 w-8 text-primary/60" />
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&q=80", // Watch
+                    "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200&q=80", // Headphones
+                    "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=200&q=80", // Sunglasses
+                    "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=200&q=80", // Camera
+                    "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200&q=80", // Sneaker
+                    "https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=200&q=80", // Perfume
+                  ].map((src, i) => (
+                    <div key={i} className="aspect-square relative rounded overflow-hidden">
+                      <Image
+                        src={src}
+                        alt={`Product ${i + 1}`}
+                        fill
+                        className="object-cover"
+                      />
                     </div>
                   ))}
                 </div>
-                <div className="mt-4 space-y-2">
-                  <div className="h-3 bg-muted rounded-full w-3/4"></div>
-                  <div className="h-3 bg-muted rounded-full w-1/2"></div>
-                </div>
               </div>
             </div>
           </div>
         </div>
-      </section>
 
-      {/* Social proof - Featured In */}
-      <section className="bg-muted py-8">
-        <div className="container mx-auto px-4">
-          <p className="text-center text-primary font-medium text-sm mb-6 uppercase tracking-wider">Trusted by Shopify Stores</p>
-          <div className="flex flex-wrap items-center justify-center gap-8 md:gap-16 opacity-60">
-            <span className="text-xl font-bold text-muted-foreground">Shopify</span>
-            <span className="text-xl font-bold text-muted-foreground">Etsy</span>
-            <span className="text-xl font-bold text-muted-foreground">WooCommerce</span>
-            <span className="text-xl font-bold text-muted-foreground">BigCommerce</span>
-          </div>
+        {/* Diagonal divider at bottom */}
+        <div className="absolute bottom-0 left-0 right-0 z-10">
+          <svg className="w-full h-16 md:h-24" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <polygon points="0,100 100,0 100,100 0,100" fill="white" />
+          </svg>
         </div>
       </section>
 
-      {/* How It Works - with wave divider */}
-      <WaveDivider flip className="-mb-1" />
-      <section id="how-it-works" className="bg-muted py-24">
+      {/* How It Works section */}
+      <section id="how-it-works" className="py-24">
         <div className="container mx-auto px-4">
+          <p className="text-center text-primary font-medium text-sm mb-2 uppercase tracking-wider">Productivity</p>
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-foreground">
-            FluxShield saves you time every step of the way
+            Do more with your marketing
           </h2>
           <p className="text-muted-foreground text-center mb-16 max-w-2xl mx-auto">
-            From product URL to campaign pack in just 4 simple steps
+            Focus on selling and not content creation. AI-powered tools mean fewer distractions and make it clear what should be posted next.
           </p>
 
-          {/* Step 1 */}
-          <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
-            <div>
-              <h3 className="text-2xl font-bold mb-4 text-foreground">Create Your Brand Profile</h3>
-              <p className="text-muted-foreground mb-4 leading-relaxed">
-                Upload your logo, product images, and moodboard references. We&apos;ll use these to ensure every generated image matches your brand aesthetic.
-              </p>
-              <Link href="/signup" className="text-primary font-medium inline-flex items-center gap-2 hover:gap-3 transition-all">
-                Get started <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-            <div className="relative">
-              <div className="absolute inset-0 bg-primary/10 rounded-full scale-75"></div>
-              <div className="relative bg-white rounded-2xl shadow-xl p-6 border">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="aspect-square bg-gradient-to-br from-primary/20 to-primary/30 rounded-lg flex items-center justify-center">
-                    <Palette className="h-12 w-12 text-primary/60" />
-                  </div>
-                  <div className="space-y-4">
-                    <div className="h-4 bg-muted rounded w-3/4"></div>
-                    <div className="h-4 bg-muted rounded w-1/2"></div>
-                    <div className="h-8 bg-primary/20 rounded w-full"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Step 2 */}
-          <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
-            <div className="order-2 md:order-1 relative">
-              <div className="absolute inset-0 bg-primary/10 rounded-full scale-75"></div>
-              <div className="relative bg-white rounded-2xl shadow-xl p-6 border">
-                <div className="flex items-center gap-2 p-3 bg-muted rounded-lg mb-4">
-                  <span className="text-sm text-muted-foreground">https://yourstore.com/products/...</span>
-                </div>
-                <div className="flex gap-4">
-                  <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/30 rounded-lg"></div>
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-muted rounded w-3/4"></div>
-                    <div className="h-3 bg-muted rounded w-full"></div>
-                    <div className="h-3 bg-muted rounded w-2/3"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="order-1 md:order-2">
-              <h3 className="text-2xl font-bold mb-4 text-foreground">Paste Your Product URL</h3>
-              <p className="text-muted-foreground mb-4 leading-relaxed">
-                Just paste a Shopify product URL. We automatically extract the title, description, price, and images—no manual data entry required.
-              </p>
-              <Link href="/signup" className="text-primary font-medium inline-flex items-center gap-2 hover:gap-3 transition-all">
-                Try it now <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </div>
-
-          {/* Step 3 */}
-          <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
-            <div>
-              <h3 className="text-2xl font-bold mb-4 text-foreground">Choose Your Style Preset</h3>
-              <p className="text-muted-foreground mb-4 leading-relaxed">
-                Select from 4 curated visual styles—Bright Minimal, Dark Moody, Outdoor Lifestyle, or Studio Macro. Each is optimized for different product types.
-              </p>
-              <Link href="/signup" className="text-primary font-medium inline-flex items-center gap-2 hover:gap-3 transition-all">
-                See all styles <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-            <div className="relative">
-              <div className="absolute inset-0 bg-primary/10 rounded-full scale-75"></div>
-              <div className="relative grid grid-cols-2 gap-4">
-                {PRESETS.map((preset) => (
-                  <div key={preset.name} className="bg-white rounded-xl shadow-lg p-4 border hover:shadow-xl transition-shadow">
-                    <preset.icon className="h-8 w-8 text-primary mb-2" />
-                    <p className="font-medium text-sm">{preset.name}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Step 4 */}
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="order-2 md:order-1 relative">
-              <div className="absolute inset-0 bg-primary/10 rounded-full scale-75"></div>
-              <div className="relative bg-white rounded-2xl shadow-xl p-6 border">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="font-medium">campaign-pack.zip</span>
-                  <Download className="h-5 w-5 text-primary" />
-                </div>
-                <div className="space-y-2 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" /> 12 product images
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" /> 7 social captions
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" /> 3 aspect ratios
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="order-1 md:order-2">
-              <h3 className="text-2xl font-bold mb-4 text-foreground">Download Your Campaign Pack</h3>
-              <p className="text-muted-foreground mb-4 leading-relaxed">
-                Get 12 stunning AI-generated images plus 7 ready-to-post captions with hooks, CTAs, and hashtags—all in a convenient zip file.
-              </p>
-              <Link href="/signup" className="text-primary font-medium inline-flex items-center gap-2 hover:gap-3 transition-all">
-                Start creating <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-      <WaveDivider className="-mt-1 bg-muted" />
-
-      {/* What You Get */}
-      <section className="py-24">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-foreground">
-            Every Campaign Pack Includes
-          </h2>
-          <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
-            Everything you need to launch a week of professional social media content
-          </p>
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-lg p-8 text-center border hover:shadow-xl transition-shadow">
+            <div className="text-center">
               <div className="w-16 h-16 mx-auto mb-6 bg-primary/10 rounded-2xl flex items-center justify-center">
                 <ImageIcon className="h-8 w-8 text-primary" />
               </div>
@@ -349,7 +251,7 @@ export default function LandingPage() {
                 Varied compositions, angles, and scenes to keep your feed fresh
               </p>
             </div>
-            <div className="bg-white rounded-2xl shadow-lg p-8 text-center border hover:shadow-xl transition-shadow">
+            <div className="text-center">
               <div className="w-16 h-16 mx-auto mb-6 bg-primary/10 rounded-2xl flex items-center justify-center">
                 <FileText className="h-8 w-8 text-primary" />
               </div>
@@ -358,7 +260,7 @@ export default function LandingPage() {
                 One week of engaging posts with hooks, CTAs, and hashtags
               </p>
             </div>
-            <div className="bg-white rounded-2xl shadow-lg p-8 text-center border hover:shadow-xl transition-shadow">
+            <div className="text-center">
               <div className="w-16 h-16 mx-auto mb-6 bg-primary/10 rounded-2xl flex items-center justify-center">
                 <Download className="h-8 w-8 text-primary" />
               </div>
@@ -371,12 +273,75 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing */}
-      <WaveDivider flip className="-mb-1" />
-      <section id="pricing" className="bg-muted py-24">
+      {/* Feature section with photo background */}
+      <section className="relative py-24">
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1920&q=80"
+            alt="E-commerce workspace"
+            fill
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-accent/80"></div>
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="relative">
+              <Image
+                src="https://images.unsplash.com/photo-1556742393-d75f468bfcb0?w=600&q=80"
+                alt="Person working on laptop"
+                width={500}
+                height={400}
+                className="rounded-xl shadow-2xl"
+              />
+            </div>
+            <div className="text-white">
+              <p className="font-medium text-sm mb-2 uppercase tracking-wider text-white/80">Collaboration</p>
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">Do more together</h2>
+              <p className="text-lg text-white/90 mb-6 leading-relaxed">
+                Create campaigns and share them with your team. Keep everyone up to date even if they are working remotely. Empower your team members, designers, and marketers to collaborate seamlessly.
+              </p>
+              <Link href="/signup">
+                <Button className="bg-white text-primary hover:bg-white/90 font-semibold">
+                  Get Started Free
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+        {/* Diagonal divider */}
+        <div className="absolute bottom-0 left-0 right-0 z-10">
+          <svg className="w-full h-16 md:h-24" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <polygon points="0,0 100,100 0,100" fill="white" />
+          </svg>
+        </div>
+      </section>
+
+      {/* Style Presets */}
+      <section className="py-24 bg-muted">
         <div className="container mx-auto px-4">
+          <p className="text-center text-primary font-medium text-sm mb-2 uppercase tracking-wider">Style Presets</p>
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-foreground">
+            Choose your visual style
+          </h2>
+          <div className="grid md:grid-cols-4 gap-6 max-w-5xl mx-auto">
+            {PRESETS.map((preset) => (
+              <div key={preset.name} className="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition-shadow">
+                <preset.icon className="h-10 w-10 mx-auto mb-4 text-primary" />
+                <h3 className="font-bold mb-2">{preset.name}</h3>
+                <p className="text-sm text-muted-foreground">{preset.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section id="pricing" className="py-24">
+        <div className="container mx-auto px-4">
+          <p className="text-center text-primary font-medium text-sm mb-2 uppercase tracking-wider">Pricing</p>
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-foreground">
-            Simple, Transparent Pricing
+            Simple, transparent pricing
           </h2>
           <p className="text-muted-foreground text-center mb-12">
             Start free, upgrade when you need more
@@ -385,7 +350,7 @@ export default function LandingPage() {
             {PRICING.map((plan) => (
               <div
                 key={plan.name}
-                className={`bg-white rounded-2xl p-6 border ${
+                className={`bg-white rounded-xl p-6 border ${
                   plan.popular
                     ? "border-primary shadow-xl ring-2 ring-primary relative"
                     : "shadow-lg hover:shadow-xl transition-shadow"
@@ -417,7 +382,7 @@ export default function LandingPage() {
                 </ul>
                 <Link href="/signup" className="block">
                   <Button
-                    className={`w-full rounded-full ${plan.popular ? "" : ""}`}
+                    className="w-full"
                     variant={plan.popular ? "default" : "outline"}
                   >
                     {plan.cta}
@@ -428,51 +393,52 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-      <WaveDivider className="-mt-1 bg-muted" />
 
-      {/* CTA Section */}
-      <section className="py-24">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
-            Ready to create your first campaign?
+      {/* Final CTA with photo background */}
+      <section className="relative py-24">
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1920&q=80"
+            alt="Team collaboration"
+            fill
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/95 to-accent/90"></div>
+        </div>
+        <div className="container mx-auto px-4 relative z-10 text-center text-white">
+          <h2 className="text-3xl md:text-5xl font-bold mb-6">
+            Ready to transform your marketing?
           </h2>
-          <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Join thousands of Shopify sellers creating professional product imagery in minutes.
+          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+            Join thousands of e-commerce sellers creating professional product imagery in minutes.
           </p>
-          <Link href="/signup">
-            <Button size="lg" className="rounded-full px-8 py-6 text-base font-semibold uppercase tracking-wide">
-              Get Started Free
-            </Button>
-          </Link>
-          <p className="text-sm text-muted-foreground mt-4">
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link href="/signup">
+              <Button size="lg" className="bg-white text-primary hover:bg-white/90 font-bold px-8 py-6 text-base uppercase tracking-wide">
+                Get Started Free
+              </Button>
+            </Link>
+          </div>
+          <p className="text-sm text-white/70 mt-6">
             No credit card required • Free trial includes 1 campaign
           </p>
         </div>
       </section>
 
-      {/* Disclaimer */}
-      <section className="container mx-auto px-4 pb-12">
-        <div className="bg-muted/50 border border-dashed rounded-xl py-4 px-6 text-center text-sm text-muted-foreground">
-          <strong>Note:</strong> AI-generated lifestyle imagery may not
-          perfectly reproduce label text or fine packaging details. We
-          recommend reviewing generated images before publishing.
-        </div>
-      </section>
-
       {/* Footer */}
-      <footer className="border-t py-8">
+      <footer className="bg-gray-900 text-white py-12">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2">
               <Zap className="h-6 w-6 text-primary" />
-              <span className="font-bold text-foreground">FluxShield</span>
+              <span className="font-bold">FluxShield</span>
             </div>
-            <nav className="flex items-center gap-6 text-sm text-muted-foreground">
-              <Link href="#how-it-works" className="hover:text-foreground transition-colors">How It Works</Link>
-              <Link href="#pricing" className="hover:text-foreground transition-colors">Pricing</Link>
-              <Link href="/login" className="hover:text-foreground transition-colors">Login</Link>
+            <nav className="flex items-center gap-6 text-sm text-gray-400">
+              <Link href="#how-it-works" className="hover:text-white transition-colors">How It Works</Link>
+              <Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link>
+              <Link href="/login" className="hover:text-white transition-colors">Login</Link>
             </nav>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-gray-400">
               &copy; {new Date().getFullYear()} FluxShield. All rights reserved.
             </p>
           </div>
