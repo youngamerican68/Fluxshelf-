@@ -3,63 +3,63 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Zap,
+  Link as LinkIcon,
+  Palette,
   ImageIcon,
   FileText,
   Download,
-  Sparkles,
-  Camera,
-  Palette,
-  Mountain,
-  Microscope,
-  ArrowRight,
   Check,
-  Play,
+  ArrowRight,
+  Sparkles,
+  Clock,
+  Package,
 } from "lucide-react";
 
-// Diagonal divider component
-const DiagonalDivider = ({
-  fromColor = "white",
-  toColor = "primary",
-  flip = false
-}: {
-  fromColor?: string;
-  toColor?: string;
-  flip?: boolean;
-}) => (
-  <div className={`relative h-24 md:h-32 ${flip ? "rotate-180" : ""}`}>
-    <svg
-      className="absolute inset-0 w-full h-full"
-      viewBox="0 0 100 100"
-      preserveAspectRatio="none"
-    >
-      <polygon
-        points="0,100 100,0 100,100"
-        className={toColor === "primary" ? "fill-primary" : toColor === "white" ? "fill-white" : "fill-muted"}
-      />
-    </svg>
-  </div>
-);
-
-const PRESETS = [
+const STYLE_PRESETS = [
   {
     name: "Bright Minimal",
-    description: "Clean, modern aesthetics with high-key lighting",
-    icon: Sparkles,
+    description: "Clean white backgrounds, soft natural lighting",
+    gradient: "from-gray-100 to-white",
+    accent: "bg-cyan-500",
   },
   {
     name: "Dark Moody",
-    description: "Dramatic shadows and luxury vibes",
-    icon: Camera,
+    description: "Dramatic shadows, luxury aesthetic",
+    gradient: "from-gray-900 to-gray-800",
+    accent: "bg-purple-500",
   },
   {
     name: "Outdoor Lifestyle",
-    description: "Natural settings with golden hour warmth",
-    icon: Mountain,
+    description: "Golden hour, natural settings",
+    gradient: "from-amber-100 to-orange-50",
+    accent: "bg-orange-500",
   },
   {
     name: "Studio Macro",
-    description: "Detailed close-ups with precise lighting",
-    icon: Microscope,
+    description: "Detailed close-ups, gradient backdrops",
+    gradient: "from-blue-100 to-indigo-50",
+    accent: "bg-blue-500",
+  },
+];
+
+const SAMPLE_CAPTIONS = [
+  {
+    day: "Monday",
+    hook: "Time flies when you look this good.",
+    caption: "Introducing the perfect everyday companion. Precision engineering meets timeless design.",
+    hashtags: "#watches #minimalist #style #accessories #timepiece",
+  },
+  {
+    day: "Wednesday",
+    hook: "Behind every great outfit is a great watch.",
+    caption: "Crafted for those who appreciate the details. Because every second counts.",
+    hashtags: "#watchesofinstagram #luxury #fashion #mensstyle",
+  },
+  {
+    day: "Friday",
+    hook: "Weekend ready.",
+    caption: "From boardroom to brunch - one watch that does it all. What's your weekend plan?",
+    hashtags: "#weekendvibes #OOTD #watchlover #lifestyle",
   },
 ];
 
@@ -80,7 +80,7 @@ const PRICING = [
     campaigns: "10 campaigns/mo",
     features: [
       "Everything in Free",
-      "2 regenerations per campaign",
+      "All style presets",
       "Priority generation",
     ],
     cta: "Get Started",
@@ -112,226 +112,392 @@ const PRICING = [
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero with photo background */}
-      <section className="relative min-h-[90vh] flex items-center">
-        {/* Background image with gradient overlay */}
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1920&q=80"
-            alt="Marketing workspace"
-            fill
-            className="object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/80 to-accent/70"></div>
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <header className="border-b bg-white sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Zap className="h-7 w-7 text-primary" />
+            <span className="text-xl font-bold">FluxShield</span>
+          </div>
+          <nav className="hidden md:flex items-center gap-8">
+            <Link href="#how-it-works" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              How It Works
+            </Link>
+            <Link href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              Pricing
+            </Link>
+            <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              Log in
+            </Link>
+            <Link href="/signup">
+              <Button className="font-semibold">Get Started Free</Button>
+            </Link>
+          </nav>
+          <div className="md:hidden flex items-center gap-3">
+            <Link href="/login">
+              <Button variant="ghost" size="sm">Log in</Button>
+            </Link>
+            <Link href="/signup">
+              <Button size="sm">Get Started</Button>
+            </Link>
+          </div>
         </div>
+      </header>
 
-        {/* Header - overlaid on hero */}
-        <header className="absolute top-0 left-0 right-0 z-20">
-          <div className="container mx-auto px-4 py-6 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Zap className="h-8 w-8 text-white" />
-              <span className="text-xl font-bold text-white">FluxShield</span>
-            </div>
-            <nav className="hidden md:flex items-center gap-8">
-              <Link href="#how-it-works" className="text-sm font-medium text-white/80 hover:text-white transition-colors">
-                How It Works
-              </Link>
-              <Link href="#pricing" className="text-sm font-medium text-white/80 hover:text-white transition-colors">
-                Pricing
-              </Link>
-              <Link href="/login" className="text-sm font-medium text-white/80 hover:text-white transition-colors">
-                Log in
-              </Link>
+      {/* Hero Section */}
+      <section className="py-20 md:py-28">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 text-gray-900">
+              Turn any Shopify product into
+              <span className="text-primary"> a week of content</span>
+            </h1>
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              Paste a product URL. Get 12 lifestyle photos and 7 ready-to-post captions with hashtags. Download everything in 5 minutes.
+            </p>
+            <div className="flex flex-wrap justify-center gap-4 mb-12">
               <Link href="/signup">
-                <Button className="bg-white text-primary hover:bg-white/90 font-semibold px-6">
-                  Get Started Free
+                <Button size="lg" className="font-semibold px-8 py-6 text-base">
+                  Start Free Trial
+                  <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-            </nav>
-            <div className="md:hidden flex items-center gap-4">
-              <Link href="/login">
-                <Button variant="ghost" size="sm" className="text-white">Log in</Button>
-              </Link>
-              <Link href="/signup">
-                <Button size="sm" className="bg-white text-primary">Get Started</Button>
+              <Link href="#how-it-works">
+                <Button size="lg" variant="outline" className="px-8 py-6 text-base">
+                  See How It Works
+                </Button>
               </Link>
             </div>
+            <p className="text-sm text-muted-foreground">
+              No credit card required • 1 free campaign included
+            </p>
           </div>
-        </header>
 
-        {/* Hero content */}
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="text-left text-white">
-              <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 leading-tight">
-                Show your products.
-                <br />
-                See results.
-              </h1>
-              <p className="text-xl text-white/90 mb-8 leading-relaxed max-w-lg">
-                Create stunning marketing campaigns with AI. Perfect for{" "}
-                <span className="underline decoration-2 underline-offset-4">e-commerce</span>,{" "}
-                <span className="underline decoration-2 underline-offset-4">social media</span>, and more!
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <Link href="/signup">
-                  <Button size="lg" className="bg-white text-primary hover:bg-white/90 font-bold px-8 py-6 text-base uppercase tracking-wide">
-                    Download Now
-                    <span className="block text-xs font-normal normal-case">For Free</span>
-                  </Button>
-                </Link>
-                <Link href="#how-it-works">
-                  <Button size="lg" variant="outline" className="border-white/50 text-white hover:bg-white/10 px-8 py-6 text-base">
-                    <Play className="h-5 w-5 mr-2" />
-                    See How It Works
-                  </Button>
-                </Link>
-              </div>
-            </div>
-            <div className="relative hidden md:block">
-              {/* Product mockup */}
-              <div className="relative bg-white rounded-xl shadow-2xl p-4 transform rotate-2 hover:rotate-0 transition-transform">
-                <div className="flex items-center gap-2 mb-3 pb-3 border-b">
+          {/* App Screenshot */}
+          <div className="mt-16 max-w-5xl mx-auto">
+            <div className="bg-gray-100 rounded-xl p-2 shadow-2xl">
+              <div className="bg-white rounded-lg overflow-hidden border">
+                <div className="flex items-center gap-2 px-4 py-3 border-b bg-gray-50">
                   <div className="w-3 h-3 rounded-full bg-red-400"></div>
                   <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
                   <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                  <div className="ml-4 flex-1 bg-white rounded px-3 py-1 text-sm text-gray-500">
+                    fluxshield.com/app/campaigns/new
+                  </div>
                 </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&q=80", // Watch
-                    "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200&q=80", // Headphones
-                    "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=200&q=80", // Sunglasses
-                    "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=200&q=80", // Camera
-                    "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200&q=80", // Sneaker
-                    "https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=200&q=80", // Perfume
-                  ].map((src, i) => (
-                    <div key={i} className="aspect-square relative rounded overflow-hidden">
-                      <Image
-                        src={src}
-                        alt={`Product ${i + 1}`}
-                        fill
-                        className="object-cover"
-                      />
+                <div className="p-8 bg-gradient-to-br from-gray-50 to-white">
+                  <div className="grid md:grid-cols-2 gap-8 items-center">
+                    {/* Left: Input form mockup */}
+                    <div className="space-y-4">
+                      <div className="bg-white rounded-lg border p-4 shadow-sm">
+                        <label className="text-sm font-medium text-gray-700 mb-2 block">Shopify Product URL</label>
+                        <div className="flex gap-2">
+                          <div className="flex-1 bg-gray-50 border rounded-md px-3 py-2 text-sm text-gray-600">
+                            https://mystore.myshopify.com/products/minimalist-watch
+                          </div>
+                          <Button size="sm" className="shrink-0">
+                            <LinkIcon className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="bg-white rounded-lg border p-4 shadow-sm">
+                        <label className="text-sm font-medium text-gray-700 mb-3 block">Style Preset</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {["Bright Minimal", "Dark Moody", "Outdoor", "Studio"].map((style, i) => (
+                            <div key={style} className={`px-3 py-2 rounded-md text-xs font-medium text-center border ${i === 0 ? "bg-primary text-white border-primary" : "bg-gray-50 text-gray-600"}`}>
+                              {style}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <Button className="w-full" size="lg">
+                        <Sparkles className="mr-2 h-5 w-5" />
+                        Generate Campaign
+                      </Button>
                     </div>
-                  ))}
+                    {/* Right: Output preview */}
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&q=80",
+                        "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=200&q=80",
+                        "https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?w=200&q=80",
+                        "https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?w=200&q=80",
+                        "https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=200&q=80",
+                        "https://images.unsplash.com/photo-1509048191080-d2984bad6ae5?w=200&q=80",
+                      ].map((src, i) => (
+                        <div key={i} className="aspect-square relative rounded-lg overflow-hidden shadow-md">
+                          <Image src={src} alt={`Generated ${i + 1}`} fill className="object-cover" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* Diagonal divider at bottom */}
-        <div className="absolute bottom-0 left-0 right-0 z-10">
-          <svg className="w-full h-16 md:h-24" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <polygon points="0,100 100,0 100,100 0,100" fill="white" />
-          </svg>
+      {/* How It Works Header */}
+      <section id="how-it-works" className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-primary font-semibold text-sm mb-2 uppercase tracking-wider">How It Works</p>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
+            From product URL to campaign pack in 5 minutes
+          </h2>
         </div>
       </section>
 
-      {/* How It Works section */}
-      <section id="how-it-works" className="py-24">
+      {/* Feature 1: Paste Shopify URL */}
+      <section className="py-20">
         <div className="container mx-auto px-4">
-          <p className="text-center text-primary font-medium text-sm mb-2 uppercase tracking-wider">Productivity</p>
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-foreground">
-            Do more with your marketing
-          </h2>
-          <p className="text-muted-foreground text-center mb-16 max-w-2xl mx-auto">
-            Focus on selling and not content creation. AI-powered tools mean fewer distractions and make it clear what should be posted next.
-          </p>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-6 bg-primary/10 rounded-2xl flex items-center justify-center">
-                <ImageIcon className="h-8 w-8 text-primary" />
+          <div className="grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+            <div>
+              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium mb-4">
+                <LinkIcon className="h-4 w-4" />
+                Step 1
               </div>
-              <h3 className="text-xl font-bold mb-3">12 Product Images</h3>
-              <p className="text-muted-foreground">
-                Varied compositions, angles, and scenes to keep your feed fresh
+              <h3 className="text-3xl font-bold mb-4 text-gray-900">
+                Paste your Shopify product URL
+              </h3>
+              <p className="text-lg text-muted-foreground mb-6">
+                Just copy and paste any Shopify product URL. We automatically extract the product title, description, price, and images - no manual data entry needed.
               </p>
+              <ul className="space-y-3">
+                {["Works with any Shopify store", "Auto-extracts product details", "Supports product variants"].map((item) => (
+                  <li key={item} className="flex items-center gap-3 text-gray-600">
+                    <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
             </div>
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-6 bg-primary/10 rounded-2xl flex items-center justify-center">
-                <FileText className="h-8 w-8 text-primary" />
+            <div className="bg-gray-50 rounded-2xl p-8">
+              <div className="bg-white rounded-xl shadow-lg p-6 border">
+                <label className="text-sm font-medium text-gray-700 mb-3 block">Product URL</label>
+                <div className="bg-gray-50 border rounded-lg px-4 py-3 mb-4 font-mono text-sm text-gray-600 break-all">
+                  https://example.myshopify.com/products/minimalist-watch-silver
+                </div>
+                <div className="border-t pt-4 mt-4">
+                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">Extracted Data</p>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Title:</span>
+                      <span className="text-sm font-medium">Minimalist Watch - Silver</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Price:</span>
+                      <span className="text-sm font-medium">$149.00</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Images:</span>
+                      <span className="text-sm font-medium">4 found</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <h3 className="text-xl font-bold mb-3">7 Captions</h3>
-              <p className="text-muted-foreground">
-                One week of engaging posts with hooks, CTAs, and hashtags
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-6 bg-primary/10 rounded-2xl flex items-center justify-center">
-                <Download className="h-8 w-8 text-primary" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">3 Aspect Ratios</h3>
-              <p className="text-muted-foreground">
-                Square (1:1), Portrait (4:5), and Story (9:16) crops included
-              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Feature section with photo background */}
-      <section className="relative py-24">
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1920&q=80"
-            alt="E-commerce workspace"
-            fill
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-accent/80"></div>
-        </div>
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="relative">
-              <Image
-                src="https://images.unsplash.com/photo-1556742393-d75f468bfcb0?w=600&q=80"
-                alt="Person working on laptop"
-                width={500}
-                height={400}
-                className="rounded-xl shadow-2xl"
-              />
+      {/* Feature 2: Choose Style Preset */}
+      <section className="py-20 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+            <div className="order-2 md:order-1">
+              <div className="grid grid-cols-2 gap-4">
+                {STYLE_PRESETS.map((preset) => (
+                  <div key={preset.name} className="bg-white rounded-xl p-4 shadow-md border hover:shadow-lg transition-shadow">
+                    <div className={`h-24 rounded-lg bg-gradient-to-br ${preset.gradient} mb-3 flex items-center justify-center`}>
+                      <div className={`w-8 h-8 rounded-full ${preset.accent}`}></div>
+                    </div>
+                    <h4 className="font-semibold text-sm mb-1">{preset.name}</h4>
+                    <p className="text-xs text-muted-foreground">{preset.description}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="text-white">
-              <p className="font-medium text-sm mb-2 uppercase tracking-wider text-white/80">Collaboration</p>
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">Do more together</h2>
-              <p className="text-lg text-white/90 mb-6 leading-relaxed">
-                Create campaigns and share them with your team. Keep everyone up to date even if they are working remotely. Empower your team members, designers, and marketers to collaborate seamlessly.
+            <div className="order-1 md:order-2">
+              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium mb-4">
+                <Palette className="h-4 w-4" />
+                Step 2
+              </div>
+              <h3 className="text-3xl font-bold mb-4 text-gray-900">
+                Choose your visual style
+              </h3>
+              <p className="text-lg text-muted-foreground mb-6">
+                Select from 4 professionally designed style presets. Each preset generates images with consistent lighting, backgrounds, and mood that match your brand aesthetic.
               </p>
-              <Link href="/signup">
-                <Button className="bg-white text-primary hover:bg-white/90 font-semibold">
-                  Get Started Free
-                </Button>
-              </Link>
+              <ul className="space-y-3">
+                {["Consistent brand look across all images", "Optimized for social media engagement", "No design skills required"].map((item) => (
+                  <li key={item} className="flex items-center gap-3 text-gray-600">
+                    <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </div>
-        {/* Diagonal divider */}
-        <div className="absolute bottom-0 left-0 right-0 z-10">
-          <svg className="w-full h-16 md:h-24" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <polygon points="0,0 100,100 0,100" fill="white" />
-          </svg>
+      </section>
+
+      {/* Feature 3: 12 Lifestyle Shots */}
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+            <div>
+              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium mb-4">
+                <ImageIcon className="h-4 w-4" />
+                Step 3
+              </div>
+              <h3 className="text-3xl font-bold mb-4 text-gray-900">
+                Get 12 lifestyle product shots
+              </h3>
+              <p className="text-lg text-muted-foreground mb-6">
+                Our AI generates 12 unique lifestyle images featuring your product in different scenes, angles, and compositions. Each image is crafted to stop the scroll.
+              </p>
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                {["Hero shot", "45° angle", "Flat lay", "Lifestyle", "Close-up", "In context"].map((type) => (
+                  <div key={type} className="bg-gray-100 rounded-lg px-3 py-2 text-xs font-medium text-gray-600 text-center">
+                    {type}
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                + 6 more scene variations in every campaign
+              </p>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&q=80",
+                "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=300&q=80",
+                "https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?w=300&q=80",
+                "https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?w=300&q=80",
+                "https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=300&q=80",
+                "https://images.unsplash.com/photo-1509048191080-d2984bad6ae5?w=300&q=80",
+                "https://images.unsplash.com/photo-1533139502658-0198f920d8e8?w=300&q=80",
+                "https://images.unsplash.com/photo-1495704907664-81f74a7efd9b?w=300&q=80",
+                "https://images.unsplash.com/photo-1539874754764-5a96559165b0?w=300&q=80",
+              ].map((src, i) => (
+                <div key={i} className="aspect-square relative rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow">
+                  <Image src={src} alt={`Lifestyle shot ${i + 1}`} fill className="object-cover" />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Style Presets */}
-      <section className="py-24 bg-muted">
+      {/* Feature 4: 7 Days of Captions */}
+      <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
-          <p className="text-center text-primary font-medium text-sm mb-2 uppercase tracking-wider">Style Presets</p>
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-foreground">
-            Choose your visual style
-          </h2>
-          <div className="grid md:grid-cols-4 gap-6 max-w-5xl mx-auto">
-            {PRESETS.map((preset) => (
-              <div key={preset.name} className="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition-shadow">
-                <preset.icon className="h-10 w-10 mx-auto mb-4 text-primary" />
-                <h3 className="font-bold mb-2">{preset.name}</h3>
-                <p className="text-sm text-muted-foreground">{preset.description}</p>
+          <div className="grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+            <div className="order-2 md:order-1 space-y-4">
+              {SAMPLE_CAPTIONS.map((caption) => (
+                <div key={caption.day} className="bg-white rounded-xl p-5 shadow-md border">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="bg-primary/10 text-primary text-xs font-semibold px-2 py-1 rounded">
+                      {caption.day}
+                    </div>
+                  </div>
+                  <p className="font-semibold text-gray-900 mb-2">{caption.hook}</p>
+                  <p className="text-sm text-gray-600 mb-3">{caption.caption}</p>
+                  <p className="text-xs text-primary">{caption.hashtags}</p>
+                </div>
+              ))}
+              <p className="text-sm text-muted-foreground text-center">+ 4 more captions included</p>
+            </div>
+            <div className="order-1 md:order-2">
+              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium mb-4">
+                <FileText className="h-4 w-4" />
+                Step 4
               </div>
-            ))}
+              <h3 className="text-3xl font-bold mb-4 text-gray-900">
+                7 days of captions ready to post
+              </h3>
+              <p className="text-lg text-muted-foreground mb-6">
+                Each campaign includes a full week of social media captions. Every caption comes with an attention-grabbing hook, engaging copy, a clear CTA, and relevant hashtags.
+              </p>
+              <ul className="space-y-3">
+                {["Scroll-stopping hooks", "Platform-optimized hashtags", "Clear calls-to-action", "Varied content themes"].map((item) => (
+                  <li key={item} className="flex items-center gap-3 text-gray-600">
+                    <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Feature 5: Download Everything */}
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+            <div>
+              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium mb-4">
+                <Download className="h-4 w-4" />
+                Step 5
+              </div>
+              <h3 className="text-3xl font-bold mb-4 text-gray-900">
+                Download everything in one pack
+              </h3>
+              <p className="text-lg text-muted-foreground mb-6">
+                Get a complete campaign pack as a single ZIP file. All images are pre-cropped to the right dimensions for every major platform. Captions come in a ready-to-use CSV.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                {[
+                  { label: "1080×1080", desc: "Feed" },
+                  { label: "1080×1350", desc: "Portrait" },
+                  { label: "1080×1920", desc: "Stories" },
+                ].map((format) => (
+                  <div key={format.label} className="bg-gray-100 rounded-lg px-4 py-3 text-center">
+                    <p className="font-mono text-sm font-semibold">{format.label}</p>
+                    <p className="text-xs text-muted-foreground">{format.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="bg-gray-900 rounded-2xl p-6 text-white font-mono text-sm">
+              <div className="flex items-center gap-2 mb-4 text-gray-400">
+                <Package className="h-4 w-4" />
+                campaign-pack.zip
+              </div>
+              <div className="space-y-1 text-gray-300">
+                <p>📁 images/</p>
+                <p className="pl-4">📁 square_1080x1080/ <span className="text-gray-500">(12 images)</span></p>
+                <p className="pl-4">📁 portrait_1080x1350/ <span className="text-gray-500">(12 images)</span></p>
+                <p className="pl-4">📁 story_1080x1920/ <span className="text-gray-500">(12 images)</span></p>
+                <p>📁 captions/</p>
+                <p className="pl-4">📄 captions.csv <span className="text-gray-500">(7 posts)</span></p>
+                <p>📁 meta/</p>
+                <p className="pl-4">📄 product.json</p>
+                <p>📄 README.txt</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats/Social Proof */}
+      <section className="py-16 bg-primary">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-3 gap-8 text-center text-white">
+            <div>
+              <p className="text-4xl font-bold mb-2">5 min</p>
+              <p className="text-primary-foreground/80">Average generation time</p>
+            </div>
+            <div>
+              <p className="text-4xl font-bold mb-2">12 images</p>
+              <p className="text-primary-foreground/80">Per campaign</p>
+            </div>
+            <div>
+              <p className="text-4xl font-bold mb-2">3 formats</p>
+              <p className="text-primary-foreground/80">Ready to post</p>
+            </div>
           </div>
         </div>
       </section>
@@ -339,13 +505,15 @@ export default function LandingPage() {
       {/* Pricing */}
       <section id="pricing" className="py-24">
         <div className="container mx-auto px-4">
-          <p className="text-center text-primary font-medium text-sm mb-2 uppercase tracking-wider">Pricing</p>
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-foreground">
-            Simple, transparent pricing
-          </h2>
-          <p className="text-muted-foreground text-center mb-12">
-            Start free, upgrade when you need more
-          </p>
+          <div className="text-center mb-12">
+            <p className="text-primary font-semibold text-sm mb-2 uppercase tracking-wider">Pricing</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Simple, transparent pricing
+            </h2>
+            <p className="text-muted-foreground">
+              Start free, upgrade when you need more campaigns
+            </p>
+          </div>
           <div className="grid md:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {PRICING.map((plan) => (
               <div
@@ -371,20 +539,14 @@ export default function LandingPage() {
                 </div>
                 <ul className="space-y-3 mb-6">
                   {plan.features.map((feature) => (
-                    <li
-                      key={feature}
-                      className="text-sm text-muted-foreground flex items-center gap-2"
-                    >
+                    <li key={feature} className="text-sm text-muted-foreground flex items-center gap-2">
                       <Check className="h-4 w-4 text-primary flex-shrink-0" />
                       {feature}
                     </li>
                   ))}
                 </ul>
                 <Link href="/signup" className="block">
-                  <Button
-                    className="w-full"
-                    variant={plan.popular ? "default" : "outline"}
-                  >
+                  <Button className="w-full" variant={plan.popular ? "default" : "outline"}>
                     {plan.cta}
                   </Button>
                 </Link>
@@ -394,33 +556,23 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Final CTA with photo background */}
-      <section className="relative py-24">
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1920&q=80"
-            alt="Team collaboration"
-            fill
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/95 to-accent/90"></div>
-        </div>
-        <div className="container mx-auto px-4 relative z-10 text-center text-white">
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            Ready to transform your marketing?
+      {/* Final CTA */}
+      <section className="py-24 bg-gray-50">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+            Ready to generate your first campaign?
           </h2>
-          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-            Join thousands of e-commerce sellers creating professional product imagery in minutes.
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Stop spending hours on product photography and caption writing. Get a full week of content in 5 minutes.
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link href="/signup">
-              <Button size="lg" className="bg-white text-primary hover:bg-white/90 font-bold px-8 py-6 text-base uppercase tracking-wide">
-                Get Started Free
-              </Button>
-            </Link>
-          </div>
-          <p className="text-sm text-white/70 mt-6">
-            No credit card required • Free trial includes 1 campaign
+          <Link href="/signup">
+            <Button size="lg" className="font-semibold px-8 py-6 text-base">
+              Start Free Trial
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </Link>
+          <p className="text-sm text-muted-foreground mt-4">
+            No credit card required • 1 free campaign included
           </p>
         </div>
       </section>
