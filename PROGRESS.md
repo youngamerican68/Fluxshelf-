@@ -1,8 +1,8 @@
 # FluxShield Development Progress
 
-## Status: MVP Complete - Database Configured
+## Status: MVP Complete - Ready for Testing
 
-**Last Updated:** December 30, 2024
+**Last Updated:** December 31, 2025
 
 ---
 
@@ -13,6 +13,7 @@
 - [x] Tailwind CSS + shadcn/ui components configured
 - [x] Supabase client setup (browser, server, middleware)
 - [x] Authentication pages (login, signup)
+- [x] Google OAuth integration
 - [x] Protected routes with middleware
 - [x] Database schema designed (`supabase/migrations/001_initial_schema.sql`)
 - [x] Storage bucket configuration (`supabase/migrations/002_storage_buckets.sql`)
@@ -71,10 +72,21 @@
 - [x] Job status monitoring
 - [x] Manual worker trigger button
 - [x] Dashboard with usage stats
-- [x] Landing page
 - [x] README documentation
 - [x] Environment variable documentation
 - [x] Build successfully passes
+
+### Phase 8: Landing Page Redesign (Dec 31, 2025)
+- [x] Hero section with app screenshot mockup
+- [x] Step 1: Paste Shopify URL (extracted data visual)
+- [x] Step 2: Choose visual style (4 preset cards)
+- [x] Step 3: 12 lifestyle product shots (image grid)
+- [x] Step 4: 7 days of captions (caption cards with hashtags)
+- [x] Step 5: Download pack (ZIP structure visualization)
+- [x] Stats bar (5 min, 12 images, 3 formats)
+- [x] Pricing section with 4 tiers
+- [x] Final CTA and footer
+- [x] Fixed broken Unsplash image URLs
 
 ---
 
@@ -107,7 +119,7 @@
 - [x] Create Supabase project (Flux Shelf - wjewmhrrkbjjqyiuggww)
 - [x] Run `001_initial_schema.sql` migration
 - [x] Run `002_storage_buckets.sql` migration
-- [ ] Configure authentication providers
+- [x] Configure authentication providers (Email + Google OAuth)
 - [x] Verify RLS policies are active
 
 ### External Service Setup
@@ -247,5 +259,5 @@ cp .env.example .env.local
 # 4. Start development server
 npm run dev
 
-# 5. Visit http://localhost:3000
+# 5. Visit http://localhost:3000 (or 3002 if 3000 is in use)
 ```
