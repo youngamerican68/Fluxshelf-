@@ -1,8 +1,11 @@
 # FluxShield Development Progress
 
-## Status: MVP Complete - Ready for Testing
+## Status: MVP Hardened - Ready for First Revenue
 
 **Last Updated:** January 1, 2026
+
+**Current Pipeline:** Cutout + Composite (background removal → lifestyle backgrounds → Sharp composite)
+**Billing:** Stripe disabled by default (`ENABLE_STRIPE=false`), free tier: 1 campaign lifetime, 2 regenerations
 
 ---
 
@@ -98,6 +101,52 @@
 - [x] Updated ZIP export with multi-platform CSV format
 - [x] Updated README in ZIP with platform tips
 
+### Phase 10: Cutout+Composite Pipeline & Pre-Commit Hardening (Jan 1, 2026)
+- [x] Background removal via fal.ai/birefnet (cutout step)
+- [x] Lifestyle background generation via FLUX Schnell
+- [x] Sharp composite overlay (cutout onto backgrounds)
+- [x] Cutout caching by SHA-256 hash (`product_cutouts` table)
+- [x] 3-step job pipeline: cutout → backgrounds → composite
+- [x] `run_id` versioning for idempotent regenerations
+- [x] Stripe feature flag (`ENABLE_STRIPE` env var)
+- [x] Quotas without Stripe (free tier: 1 campaign lifetime, 2 regenerations)
+- [x] Auto-create profile + subscription on signup (DB trigger)
+- [x] Cleanup intermediate backgrounds after composite
+- [x] Node.js runtime for worker + ZIP routes (Sharp/JSZip compatibility)
+- [x] Migration 003 applied (cutouts, triggers, quota RPCs)
+
+---
+
+## To Be Implemented (Lightweight)
+
+### Copy Product Image to Storage Before Pipeline
+**Problem:** Pipeline currently fetches from Shopify CDN URLs, which introduces dependency on external uptime/rate limits and makes retries less reliable.
+
+**Recommendation:** On campaign creation (or at cutout step), copy the chosen product image into Supabase storage, then run the pipeline from that stored asset.
+
+**Benefits:**
+- Eliminates dependency on Shopify CDN uptime/rate limits for retries/regenerations
+- Makes runs reproducible (same pixels even if product changes later)
+- Simplifies security/logging and makes caching more reliable
+- Handles "scrape found images but worker can't fetch them" edge case
+
+**Implementation Notes:**
+- Keep scraped CDN URLs in `product_images` for reference
+- Add `source_image_path` column to campaigns for stored copy
+- Pipeline prefers stored path once available
+- `downloadFromUrl()` improvements:
+  - Set reasonable User-Agent header
+  - Add timeout (e.g., 30s)
+  - Add max size limit (e.g., 20MB) to reject oversized files
+  - Accept and normalize formats (webp common from Shopify)
+  - Sharp handles most formats, but be explicit about conversions before hashing
+
+**Files to modify:**
+- `src/lib/storage.ts` - Add size/timeout limits to `downloadFromUrl()`
+- `src/app/api/campaigns/create/route.ts` - Copy first product image to storage
+- `src/app/api/worker/run/route.ts` - Prefer `source_image_path` over CDN URL
+- Migration - Add `source_image_path TEXT` to campaigns table
+
 ---
 
 ## Build Status
@@ -129,15 +178,15 @@
 - [x] Create Supabase project (Flux Shelf - wjewmhrrkbjjqyiuggww)
 - [x] Run `001_initial_schema.sql` migration
 - [x] Run `002_storage_buckets.sql` migration
+- [x] Run `003_cutouts_triggers_quota.sql` migration
 - [x] Configure authentication providers (Email + Google OAuth)
 - [x] Verify RLS policies are active
 
 ### External Service Setup
 - [x] Configure fal.ai API key
 - [x] Configure OpenRouter API key
-- [ ] Create Stripe products and prices
-- [ ] Configure Stripe webhooks
-- [ ] Set up webhook endpoint in production
+- [ ] Create Stripe products and prices (optional - billing disabled by default)
+- [ ] Configure Stripe webhooks (optional - billing disabled by default)
 
 ### Deployment
 - [ ] Deploy to Vercel
@@ -147,9 +196,10 @@
 
 ### Testing
 - [ ] Test full user flow (signup → brand → campaign → export)
-- [ ] Test subscription upgrade flow
-- [ ] Test webhook handling
-- [ ] Load test worker queue
+- [ ] Test cutout+composite pipeline end-to-end
+- [ ] Test quota enforcement (free tier: 1 campaign, 2 regenerations)
+- [ ] Test ZIP export with all 3 aspect ratios
+- [ ] (Optional) Test Stripe subscription upgrade flow
 
 ---
 
@@ -171,11 +221,14 @@ src/
 │   │   ├── layout.tsx
 │   │   └── page.tsx
 │   ├── api/
-│   │   ├── billing/
-│   │   ├── campaigns/
-│   │   ├── webhooks/
-│   │   ├── ingest-product/
-│   │   └── worker/
+│   │   ├── billing/checkout/route.ts
+│   │   ├── billing/portal/route.ts
+│   │   ├── campaigns/create/route.ts
+│   │   ├── campaigns/[id]/regenerate/route.ts
+│   │   ├── campaigns/[id]/zip/route.ts
+│   │   ├── webhooks/stripe/route.ts
+│   │   ├── ingest-product/route.ts
+│   │   └── worker/run/route.ts
 │   └── page.tsx (landing)
 ├── components/
 │   ├── ui/ (shadcn components)
@@ -187,21 +240,23 @@ src/
 │   └── trigger-worker-button.tsx
 ├── lib/
 │   ├── supabase/
-│   ├── fal.ts
-│   ├── openrouter.ts
-│   ├── stripe.ts
-│   ├── shopify.ts
-│   ├── quota.ts
-│   ├── storage.ts
-│   ├── image-processing.ts
-│   └── zip-generator.ts
+│   ├── fal.ts              # removeBackground(), generateBackground()
+│   ├── flags.ts            # isStripeEnabled()
+│   ├── image-processing.ts # compositeProductOnBackground(), hashImage()
+│   ├── openrouter.ts       # generateCaptions(), formatCaptionsForCSV()
+│   ├── quota.ts            # checkCampaignQuota(), lifetime vs monthly
+│   ├── shopify.ts          # Shopify product scraper
+│   ├── storage.ts          # uploadFile(), downloadFromUrl()
+│   ├── stripe.ts           # PLAN_LIMITS, getStripe()
+│   └── zip-generator.ts    # generateCampaignZip()
 └── types/
     └── database.ts
 
 supabase/
 └── migrations/
     ├── 001_initial_schema.sql
-    └── 002_storage_buckets.sql
+    ├── 002_storage_buckets.sql
+    └── 003_cutouts_triggers_quota.sql
 ```
 
 ---
@@ -231,7 +286,11 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 
-# Stripe (required for billing)
+# Feature Flags
+ENABLE_STRIPE=false  # Set to "true" to enable billing (default: false)
+
+# Stripe (only required if ENABLE_STRIPE=true)
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
 STRIPE_SECRET_KEY=
 STRIPE_WEBHOOK_SECRET=
 STRIPE_PRICE_STARTER=
@@ -260,14 +319,16 @@ npm install
 
 # 2. Copy environment file
 cp .env.example .env.local
-# Fill in all values
+# Fill in required values (Supabase, fal.ai, OpenRouter, WORKER_SECRET)
+# ENABLE_STRIPE defaults to false - free tier works without Stripe
 
 # 3. Run migrations in Supabase SQL Editor
 # - 001_initial_schema.sql
 # - 002_storage_buckets.sql
+# - 003_cutouts_triggers_quota.sql
 
 # 4. Start development server
 npm run dev
 
-# 5. Visit http://localhost:3000 (or 3002 if 3000 is in use)
+# 5. Visit http://localhost:3000 (or next available port)
 ```
