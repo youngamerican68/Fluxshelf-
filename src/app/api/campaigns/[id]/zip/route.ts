@@ -6,6 +6,10 @@ import { createCrops } from "@/lib/image-processing";
 import { formatCaptionsForCSV } from "@/lib/openrouter";
 import type { Database, Tables } from "@/types/database";
 
+// Force Node.js runtime for Sharp/JSZip compatibility
+export const runtime = "nodejs";
+export const maxDuration = 60; // 1 minute for zip generation
+
 function getServiceSupabase() {
   return createServiceClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -116,15 +120,56 @@ export async function POST(
       );
     }
 
-    // Format captions for CSV
-    const formattedCaptions = formatCaptionsForCSV(
-      captions.map((c) => ({
-        dayIndex: c.day_index,
+    // Group captions by day_index and platform for new format
+    const captionsByDay = new Map<number, {
+      instagram?: { caption: string; hashtags: string; cta: string };
+      tiktok?: { caption: string; hashtags: string; cta: string };
+      pinterest?: { caption: string; hashtags: string; cta: string };
+    }>();
+
+    for (const c of captions) {
+      const existing = captionsByDay.get(c.day_index) || {};
+      const platform = c.platform as "instagram" | "tiktok" | "pinterest" || "instagram";
+      existing[platform] = {
         caption: c.caption,
         hashtags: c.hashtags || "",
         cta: c.cta || "",
-      }))
-    );
+      };
+      captionsByDay.set(c.day_index, existing);
+    }
+
+    // Build full Caption objects for CSV export
+    const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    const times = ["9:00 AM", "12:00 PM", "6:00 PM", "3:00 PM", "11:00 AM", "10:00 AM", "7:00 PM"];
+
+    const fullCaptions = Array.from(captionsByDay.entries())
+      .sort(([a], [b]) => a - b)
+      .map(([dayIndex, platforms]) => ({
+        dayIndex,
+        dayName: dayNames[(dayIndex - 1) % 7],
+        suggestedTime: times[(dayIndex - 1) % 7],
+        suggestedDate: "",
+        instagram: {
+          caption: platforms.instagram?.caption || "",
+          hashtags: platforms.instagram?.hashtags || "",
+          characterCount: (platforms.instagram?.caption?.length || 0) + (platforms.instagram?.hashtags?.length || 0),
+        },
+        tiktok: {
+          caption: platforms.tiktok?.caption || "",
+          hashtags: platforms.tiktok?.hashtags || "",
+          characterCount: (platforms.tiktok?.caption?.length || 0) + (platforms.tiktok?.hashtags?.length || 0),
+        },
+        pinterest: {
+          caption: platforms.pinterest?.caption || "",
+          hashtags: platforms.pinterest?.hashtags || "",
+          characterCount: (platforms.pinterest?.caption?.length || 0) + (platforms.pinterest?.hashtags?.length || 0),
+        },
+        cta: platforms.instagram?.cta || platforms.tiktok?.cta || platforms.pinterest?.cta || "",
+        utmLink: campaign.product_url || "",
+      }));
+
+    // Format captions for CSV (include raw product URL)
+    const formattedCaptions = formatCaptionsForCSV(fullCaptions, campaign.product_url || "");
 
     // Generate product meta
     const productMeta = generateProductMeta(campaign);

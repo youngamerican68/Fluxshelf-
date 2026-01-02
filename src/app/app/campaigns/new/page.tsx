@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
@@ -16,6 +17,7 @@ import {
 } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/components/ui/use-toast";
+import { ProductImageUploader } from "@/components/product-image-uploader";
 import {
   Loader2,
   ArrowLeft,
@@ -26,6 +28,7 @@ import {
   Link as LinkIcon,
   CheckCircle,
   AlertCircle,
+  Edit2,
 } from "lucide-react";
 import type { StylePreset } from "@/types/database";
 
@@ -68,18 +71,24 @@ function NewCampaignContent() {
   const [preset, setPreset] = useState<StylePreset>("bright_minimal");
   const [loading, setLoading] = useState(false);
   const [ingesting, setIngesting] = useState(false);
-  const [productData, setProductData] = useState<{
-    title: string;
-    description: string;
-    price: string | null;
-    images: string[];
-  } | null>(null);
+  const [scrapeFailed, setScrapeFailed] = useState(false);
+
+  // Editable product fields
+  const [productTitle, setProductTitle] = useState("");
+  const [productDescription, setProductDescription] = useState("");
+  const [productPrice, setProductPrice] = useState("");
+  const [productImages, setProductImages] = useState<string[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
+
   const [brand, setBrand] = useState<{ id: string; name: string | null } | null>(
     null
   );
   const router = useRouter();
   const { toast } = useToast();
   const supabase = createClient();
+
+  // Derived state: whether we have enough data to proceed
+  const hasProductData = productTitle.trim() && productImages.length > 0;
 
   useEffect(() => {
     const fetchBrand = async () => {
@@ -105,7 +114,7 @@ function NewCampaignContent() {
     }
 
     setIngesting(true);
-    setProductData(null);
+    setScrapeFailed(false);
 
     try {
       const response = await fetch("/api/ingest-product", {
@@ -120,12 +129,28 @@ function NewCampaignContent() {
         throw new Error(data.error || "Failed to fetch product data");
       }
 
-      setProductData(data);
-      toast({
-        title: "Product found",
-        description: `Retrieved: ${data.title}`,
-      });
+      // Populate editable fields with scraped data
+      setProductTitle(data.title || "");
+      setProductDescription(data.description || "");
+      setProductPrice(data.price || "");
+      setProductImages(data.images || []);
+      setIsEditing(false);
+
+      if (!data.images || data.images.length === 0) {
+        setScrapeFailed(true);
+        toast({
+          title: "No images found",
+          description: "Please upload a product image manually",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Product found",
+          description: `Retrieved: ${data.title}`,
+        });
+      }
     } catch (error) {
+      setScrapeFailed(true);
       toast({
         title: "Failed to fetch product",
         description:
@@ -149,10 +174,19 @@ function NewCampaignContent() {
       return;
     }
 
-    if (!productData) {
+    if (!productTitle.trim()) {
       toast({
-        title: "Product data required",
-        description: "Please fetch product data first",
+        title: "Product title required",
+        description: "Please enter a product title",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (productImages.length === 0) {
+      toast({
+        title: "Product image required",
+        description: "At least one product image is required for generation",
         variant: "destructive",
       });
       return;
@@ -166,11 +200,11 @@ function NewCampaignContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           brandId,
-          productUrl,
-          productTitle: productData.title,
-          productDescription: productData.description,
-          productPrice: productData.price,
-          productImages: productData.images,
+          productUrl: productUrl || null,
+          productTitle: productTitle.trim(),
+          productDescription: productDescription.trim() || null,
+          productPrice: productPrice.trim() || null,
+          productImages,
           preset,
         }),
       });
@@ -276,41 +310,103 @@ function NewCampaignContent() {
               </div>
             </div>
 
-            {/* Product Preview */}
-            {productData && (
-              <div className="rounded-lg border p-4 bg-muted/50">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium">{productData.title}</h4>
-                    {productData.price && (
-                      <p className="text-sm text-muted-foreground">
-                        ${productData.price}
+            {/* Product Data Section - Shows after scrape attempt or when manually entering */}
+            {(productTitle || scrapeFailed || productImages.length > 0) && (
+              <div className="rounded-lg border p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {hasProductData ? (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <AlertCircle className="h-5 w-5 text-yellow-500" />
+                    )}
+                    <span className="font-medium">Product Details</span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsEditing(!isEditing)}
+                  >
+                    <Edit2 className="h-4 w-4 mr-1" />
+                    {isEditing ? "Done" : "Edit"}
+                  </Button>
+                </div>
+
+                {isEditing ? (
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="title">Title *</Label>
+                      <Input
+                        id="title"
+                        value={productTitle}
+                        onChange={(e) => setProductTitle(e.target.value)}
+                        placeholder="Product name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea
+                        id="description"
+                        value={productDescription}
+                        onChange={(e) => setProductDescription(e.target.value)}
+                        placeholder="Product description (optional)"
+                        rows={3}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="price">Price</Label>
+                      <Input
+                        id="price"
+                        value={productPrice}
+                        onChange={(e) => setProductPrice(e.target.value)}
+                        placeholder="e.g. 29.99"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <h4 className="font-medium">{productTitle || "No title"}</h4>
+                    {productPrice && (
+                      <p className="text-sm text-muted-foreground">${productPrice}</p>
+                    )}
+                    {productDescription && (
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {productDescription}
                       </p>
                     )}
-                    <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                      {productData.description}
-                    </p>
-                    {productData.images.length > 0 && (
-                      <div className="flex gap-2 mt-2">
-                        {productData.images.slice(0, 3).map((img, i) => (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            key={i}
-                            src={img}
-                            alt=""
-                            className="w-12 h-12 rounded object-cover border"
-                          />
-                        ))}
-                        {productData.images.length > 3 && (
-                          <div className="w-12 h-12 rounded bg-muted flex items-center justify-center text-sm text-muted-foreground">
-                            +{productData.images.length - 3}
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </div>
+                )}
+
+                {/* Product Images */}
+                <div>
+                  <Label className="mb-2 block">Product Images *</Label>
+                  <ProductImageUploader
+                    images={productImages}
+                    onImagesChange={setProductImages}
+                    maxImages={5}
+                  />
                 </div>
+              </div>
+            )}
+
+            {/* Manual entry prompt when no URL entered */}
+            {!productTitle && !scrapeFailed && productImages.length === 0 && (
+              <div className="text-center py-6 border rounded-lg border-dashed">
+                <p className="text-sm text-muted-foreground mb-2">
+                  Enter a Shopify URL above, or
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setScrapeFailed(true);
+                    setIsEditing(true);
+                  }}
+                >
+                  Enter product details manually
+                </Button>
               </div>
             )}
 
@@ -356,7 +452,7 @@ function NewCampaignContent() {
             <Button
               type="submit"
               className="w-full"
-              disabled={loading || !productData}
+              disabled={loading || !hasProductData}
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Generate Campaign

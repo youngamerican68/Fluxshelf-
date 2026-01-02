@@ -10,9 +10,16 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { PLAN_LIMITS } from "@/lib/stripe";
-import { ArrowLeft, Check } from "lucide-react";
+import { isStripeEnabled } from "@/lib/flags";
+import { ArrowLeft, Check, Clock } from "lucide-react";
 import { BillingActions } from "@/components/billing-actions";
 import type { SubscriptionPlan } from "@/types/database";
+
+// Free tier uses lifetime window (all time)
+const LIFETIME_PERIOD = {
+  start: new Date("1970-01-01"),
+  end: new Date("9999-12-31"),
+};
 
 function getCurrentPeriod(): { start: Date; end: Date } {
   const now = new Date();
@@ -68,6 +75,7 @@ const PLANS: Array<{
 
 export default async function BillingPage() {
   const supabase = await createClient();
+  const stripeEnabled = isStripeEnabled();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -89,8 +97,9 @@ export default async function BillingPage() {
   const currentPlan: SubscriptionPlan = subscription?.plan || "free";
   const limits = PLAN_LIMITS[currentPlan];
 
-  // Get usage
-  const { start, end } = getCurrentPeriod();
+  // Get usage - use lifetime period for free tier, monthly for paid
+  const isLifetimePlan = limits.isLifetime;
+  const { start, end } = isLifetimePlan ? LIFETIME_PERIOD : getCurrentPeriod();
   const { data: usage } = await (supabase
     .from("usage_ledger") as any)
     .select("campaigns_used")
@@ -121,6 +130,22 @@ export default async function BillingPage() {
         </p>
       </div>
 
+      {/* Billing Coming Soon Banner */}
+      {!stripeEnabled && (
+        <Card className="border-dashed bg-muted/50">
+          <CardContent className="py-6 flex items-center gap-4">
+            <Clock className="h-8 w-8 text-muted-foreground" />
+            <div>
+              <h3 className="font-semibold">Billing coming soon</h3>
+              <p className="text-sm text-muted-foreground">
+                Paid plans will be available soon. For now, enjoy your free trial.
+                Contact us if you need additional capacity.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Current Plan */}
       <Card>
         <CardHeader>
@@ -128,9 +153,11 @@ export default async function BillingPage() {
             <div>
               <CardTitle>Current Plan</CardTitle>
               <CardDescription>
-                {subscription?.current_period_end
+                {subscription?.current_period_end && !isLifetimePlan
                   ? `Renews ${new Date(subscription.current_period_end).toLocaleDateString()}`
-                  : "Free trial"}
+                  : isLifetimePlan
+                    ? "Free trial (lifetime limit)"
+                    : "Free trial"}
               </CardDescription>
             </div>
             <Badge variant={currentPlan === "free" ? "secondary" : "default"}>
@@ -141,7 +168,9 @@ export default async function BillingPage() {
         <CardContent className="space-y-4">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm">Monthly campaigns</span>
+              <span className="text-sm">
+                {isLifetimePlan ? "Lifetime campaigns" : "Monthly campaigns"}
+              </span>
               <span className="text-sm text-muted-foreground">
                 {campaignsUsed} / {limits.campaignsPerMonth}
               </span>
@@ -152,6 +181,7 @@ export default async function BillingPage() {
           <BillingActions
             currentPlan={currentPlan}
             stripeCustomerId={subscription?.stripe_customer_id || null}
+            stripeEnabled={stripeEnabled}
           />
         </CardContent>
       </Card>

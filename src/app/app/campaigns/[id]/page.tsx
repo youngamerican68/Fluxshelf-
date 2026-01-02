@@ -11,6 +11,11 @@ export default async function CampaignPage({
   const { id } = await params;
   const supabase = await createClient();
 
+  // Get current user
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   // Get campaign
   const { data: campaign, error } = await (supabase
     .from("campaigns") as any)
@@ -20,6 +25,19 @@ export default async function CampaignPage({
 
   if (error || !campaign) {
     notFound();
+  }
+
+  // Get regeneration quota
+  let regenerationsRemaining = 0;
+  if (user) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: quotaResult } = await (supabase.rpc as any)(
+      "check_regeneration_quota",
+      { p_user_id: user.id, p_campaign_id: id }
+    );
+    if (quotaResult?.allowed) {
+      regenerationsRemaining = quotaResult.remaining || 0;
+    }
   }
 
   // Get generated images
@@ -92,6 +110,7 @@ export default async function CampaignPage({
       captions={captions || []}
       jobs={jobs || []}
       downloadUrl={downloadUrl}
+      regenerationsRemaining={regenerationsRemaining}
     />
   );
 }

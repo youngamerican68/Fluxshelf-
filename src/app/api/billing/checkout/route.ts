@@ -1,9 +1,18 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createCheckoutSession, getPriceIdForPlan } from "@/lib/stripe";
+import { isStripeEnabled } from "@/lib/flags";
 import type { SubscriptionPlan } from "@/types/database";
 
 export async function POST(request: Request) {
+  // Check Stripe feature flag first
+  if (!isStripeEnabled()) {
+    return NextResponse.json(
+      { error: "Billing is not available. Contact support to upgrade." },
+      { status: 501 }
+    );
+  }
+
   try {
     const supabase = await createClient();
     const {

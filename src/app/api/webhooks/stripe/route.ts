@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 import Stripe from "stripe";
 import { stripe, getPlanFromPriceId } from "@/lib/stripe";
+import { isStripeEnabled } from "@/lib/flags";
 import type { Database } from "@/types/database";
 
 function getServiceClient() {
@@ -13,6 +14,14 @@ function getServiceClient() {
 }
 
 export async function POST(request: Request) {
+  // Check Stripe feature flag first
+  if (!isStripeEnabled()) {
+    return NextResponse.json(
+      { error: "Stripe webhooks are not enabled" },
+      { status: 404 }
+    );
+  }
+
   const body = await request.text();
   const headersList = await headers();
   const signature = headersList.get("stripe-signature");

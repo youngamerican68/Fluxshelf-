@@ -4,15 +4,27 @@ interface GenerateCaptionsParams {
   productTitle: string;
   productDescription: string;
   productPrice: string | null;
+  productUrl?: string; // Shopify product URL for UTM links
   preset: StylePreset;
   brandName?: string;
 }
 
-interface Caption {
-  dayIndex: number;
+interface PlatformCaption {
   caption: string;
   hashtags: string;
+  characterCount: number;
+}
+
+interface Caption {
+  dayIndex: number;
+  dayName: string;
+  suggestedTime: string;
+  suggestedDate: string;
+  instagram: PlatformCaption;
+  tiktok: PlatformCaption;
+  pinterest: PlatformCaption;
   cta: string;
+  utmLink: string;
 }
 
 // Map presets to brand tone
@@ -23,21 +35,66 @@ const PRESET_TONES: Record<StylePreset, string> = {
   studio_macro: "precise, detailed, and professional",
 };
 
-// Suggested posting times for each day
-const POSTING_TIMES = [
-  "9:00 AM",
-  "12:00 PM",
-  "3:00 PM",
-  "6:00 PM",
-  "10:00 AM",
-  "2:00 PM",
-  "5:00 PM",
+// Posting schedule with day names and optimal times
+const POSTING_SCHEDULE = [
+  { dayName: "Monday", time: "9:00 AM", offset: 0 },
+  { dayName: "Tuesday", time: "12:00 PM", offset: 1 },
+  { dayName: "Wednesday", time: "6:00 PM", offset: 2 },
+  { dayName: "Thursday", time: "3:00 PM", offset: 3 },
+  { dayName: "Friday", time: "11:00 AM", offset: 4 },
+  { dayName: "Saturday", time: "10:00 AM", offset: 5 },
+  { dayName: "Sunday", time: "7:00 PM", offset: 6 },
 ];
+
+/**
+ * Generate UTM-tagged URL for tracking
+ */
+function generateUtmLink(
+  productUrl: string,
+  dayIndex: number,
+  platform: string
+): string {
+  if (!productUrl) return "";
+
+  try {
+    const url = new URL(productUrl);
+    url.searchParams.set("utm_source", platform);
+    url.searchParams.set("utm_medium", "social");
+    url.searchParams.set("utm_campaign", "fluxshield");
+    url.searchParams.set("utm_content", `day${dayIndex}`);
+    return url.toString();
+  } catch {
+    // If URL parsing fails, return with basic query string
+    const separator = productUrl.includes("?") ? "&" : "?";
+    return `${productUrl}${separator}utm_source=${platform}&utm_medium=social&utm_campaign=fluxshield&utm_content=day${dayIndex}`;
+  }
+}
+
+/**
+ * Get suggested posting dates starting from next Monday
+ */
+function getPostingDates(): string[] {
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const daysUntilMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
+
+  const dates: string[] = [];
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() + daysUntilMonday + i);
+    dates.push(date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric"
+    }));
+  }
+  return dates;
+}
 
 export async function generateCaptions(
   params: GenerateCaptionsParams
 ): Promise<Caption[]> {
   const tone = PRESET_TONES[params.preset];
+  const postingDates = getPostingDates();
 
   const prompt = `You are a social media marketing expert. Generate 7 engaging social media captions for a one-week posting schedule.
 
@@ -47,13 +104,25 @@ ${params.productPrice ? `Price: ${params.productPrice}` : ""}
 ${params.brandName ? `Brand: ${params.brandName}` : ""}
 Tone: ${tone}
 
-For each day (1-7), create a caption with:
-1. An attention-grabbing hook (first line)
-2. 1-2 short paragraphs of engaging content
-3. A clear call-to-action
-4. 5-8 relevant hashtags
+For each day (1-7), create THREE versions of the caption optimized for different platforms:
 
-Vary the content focus:
+1. INSTAGRAM (max 2200 chars, optimal 125-150 chars for preview):
+   - Hook in first line (shows in preview)
+   - Emojis welcome
+   - 20-30 hashtags in a separate block
+
+2. TIKTOK (max 300 chars total including hashtags):
+   - Very short, punchy, trend-aware
+   - 3-5 hashtags max, integrated naturally
+   - Casual, conversational tone
+
+3. PINTEREST (max 500 chars):
+   - SEO-focused, descriptive
+   - Keywords naturally integrated
+   - 2-5 hashtags
+   - Focus on inspiration/aspiration
+
+Content themes for each day:
 - Day 1: Product introduction/hero post
 - Day 2: Feature highlight
 - Day 3: Behind-the-scenes or brand story
@@ -67,8 +136,18 @@ Respond in JSON format:
   "captions": [
     {
       "dayIndex": 1,
-      "caption": "Hook line here\\n\\nFirst paragraph...\\n\\nSecond paragraph...",
-      "hashtags": "#hashtag1 #hashtag2 #hashtag3",
+      "instagram": {
+        "caption": "Hook line here\\n\\nEngaging content...",
+        "hashtags": "#hashtag1 #hashtag2 ..."
+      },
+      "tiktok": {
+        "caption": "Short punchy caption #hashtag1 #hashtag2",
+        "hashtags": ""
+      },
+      "pinterest": {
+        "caption": "SEO-rich descriptive caption...",
+        "hashtags": "#keyword1 #keyword2"
+      },
       "cta": "Shop now via link in bio!"
     }
   ]
@@ -86,7 +165,7 @@ Only respond with valid JSON, no other text.`;
         "X-Title": "FluxShield",
       },
       body: JSON.stringify({
-        model: "anthropic/claude-3.5-sonnet", // Reliable model for content generation
+        model: "anthropic/claude-3.5-sonnet",
         messages: [
           {
             role: "user",
@@ -94,7 +173,7 @@ Only respond with valid JSON, no other text.`;
           },
         ],
         temperature: 0.7,
-        max_tokens: 4000,
+        max_tokens: 6000,
       }),
     });
 
@@ -111,12 +190,19 @@ Only respond with valid JSON, no other text.`;
     }
 
     // Parse the JSON response
-    let parsed: { captions: Caption[] };
+    interface RawCaption {
+      dayIndex: number;
+      instagram: { caption: string; hashtags: string };
+      tiktok: { caption: string; hashtags: string };
+      pinterest: { caption: string; hashtags: string };
+      cta: string;
+    }
+
+    let parsed: { captions: RawCaption[] };
     try {
-      // Handle potential markdown code blocks
       const jsonContent = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
       parsed = JSON.parse(jsonContent);
-    } catch (parseError) {
+    } catch {
       console.error("Failed to parse caption response:", content);
       throw new Error("Failed to parse caption response as JSON");
     }
@@ -125,22 +211,67 @@ Only respond with valid JSON, no other text.`;
       throw new Error("Invalid caption response format");
     }
 
-    // Validate and normalize the captions
-    const captions: Caption[] = parsed.captions.map((c, index) => ({
-      dayIndex: c.dayIndex || index + 1,
-      caption: c.caption || "",
-      hashtags: c.hashtags || "",
-      cta: c.cta || "Shop now!",
-    }));
+    // Transform and normalize the captions
+    const captions: Caption[] = parsed.captions.map((c, index) => {
+      const dayIndex = c.dayIndex || index + 1;
+      const schedule = POSTING_SCHEDULE[index] || POSTING_SCHEDULE[0];
+
+      // Generate platform-specific UTM links
+      const baseUrl = params.productUrl || "";
+
+      return {
+        dayIndex,
+        dayName: schedule.dayName,
+        suggestedTime: schedule.time,
+        suggestedDate: postingDates[index] || "",
+        instagram: {
+          caption: c.instagram?.caption || "",
+          hashtags: c.instagram?.hashtags || "",
+          characterCount: (c.instagram?.caption?.length || 0) + (c.instagram?.hashtags?.length || 0),
+        },
+        tiktok: {
+          caption: c.tiktok?.caption || "",
+          hashtags: c.tiktok?.hashtags || "",
+          characterCount: (c.tiktok?.caption?.length || 0) + (c.tiktok?.hashtags?.length || 0),
+        },
+        pinterest: {
+          caption: c.pinterest?.caption || "",
+          hashtags: c.pinterest?.hashtags || "",
+          characterCount: (c.pinterest?.caption?.length || 0) + (c.pinterest?.hashtags?.length || 0),
+        },
+        cta: c.cta || "Shop now!",
+        utmLink: generateUtmLink(baseUrl, dayIndex, "social"),
+      };
+    });
 
     // Ensure we have exactly 7 captions
     while (captions.length < 7) {
       const dayIndex = captions.length + 1;
+      const schedule = POSTING_SCHEDULE[captions.length] || POSTING_SCHEDULE[0];
+      const fallbackCaption = `Discover ${params.productTitle} - the perfect addition to your collection.`;
+
       captions.push({
         dayIndex,
-        caption: `Discover ${params.productTitle} - the perfect addition to your collection.\n\nExperience quality and style combined.`,
-        hashtags: "#shopnow #newproduct #musthave",
+        dayName: schedule.dayName,
+        suggestedTime: schedule.time,
+        suggestedDate: postingDates[captions.length] || "",
+        instagram: {
+          caption: `${fallbackCaption}\n\nExperience quality and style combined.`,
+          hashtags: "#shopnow #newproduct #musthave #shopping #lifestyle",
+          characterCount: 100,
+        },
+        tiktok: {
+          caption: `${fallbackCaption} #newproduct #musthave`,
+          hashtags: "",
+          characterCount: 60,
+        },
+        pinterest: {
+          caption: `${fallbackCaption} Perfect for anyone who values quality and style.`,
+          hashtags: "#shopping #lifestyle",
+          characterCount: 80,
+        },
         cta: "Link in bio to shop!",
+        utmLink: generateUtmLink(params.productUrl || "", dayIndex, "social"),
       });
     }
 
@@ -153,7 +284,51 @@ Only respond with valid JSON, no other text.`;
   }
 }
 
+/**
+ * Format captions for CSV export with all platforms
+ */
 export function formatCaptionsForCSV(
+  captions: Caption[],
+  productUrlRaw?: string
+): Array<{
+  day: number;
+  day_name: string;
+  suggested_date: string;
+  suggested_time: string;
+  instagram_caption: string;
+  instagram_hashtags: string;
+  tiktok_caption: string;
+  pinterest_caption: string;
+  pinterest_hashtags: string;
+  cta: string;
+  product_url_raw: string;
+  utm_link_instagram: string;
+  utm_link_tiktok: string;
+  utm_link_pinterest: string;
+}> {
+  const rawUrl = productUrlRaw || "";
+  return captions.map((c) => ({
+    day: c.dayIndex,
+    day_name: c.dayName,
+    suggested_date: c.suggestedDate,
+    suggested_time: c.suggestedTime,
+    instagram_caption: c.instagram.caption,
+    instagram_hashtags: c.instagram.hashtags,
+    tiktok_caption: c.tiktok.caption,
+    pinterest_caption: c.pinterest.caption,
+    pinterest_hashtags: c.pinterest.hashtags,
+    cta: c.cta,
+    product_url_raw: rawUrl,
+    utm_link_instagram: c.utmLink.replace("utm_source=social", "utm_source=instagram"),
+    utm_link_tiktok: c.utmLink.replace("utm_source=social", "utm_source=tiktok"),
+    utm_link_pinterest: c.utmLink.replace("utm_source=social", "utm_source=pinterest"),
+  }));
+}
+
+/**
+ * Legacy format for backward compatibility
+ */
+export function formatCaptionsLegacy(
   captions: Caption[]
 ): Array<{
   day: number;
@@ -162,11 +337,11 @@ export function formatCaptionsForCSV(
   cta: string;
   suggested_time: string;
 }> {
-  return captions.map((c, index) => ({
+  return captions.map((c) => ({
     day: c.dayIndex,
-    caption: c.caption,
-    hashtags: c.hashtags,
+    caption: c.instagram.caption,
+    hashtags: c.instagram.hashtags,
     cta: c.cta,
-    suggested_time: POSTING_TIMES[index] || "12:00 PM",
+    suggested_time: c.suggestedTime,
   }));
 }

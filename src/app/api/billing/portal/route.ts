@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createCustomerPortalSession } from "@/lib/stripe";
+import { isStripeEnabled } from "@/lib/flags";
 
 export async function POST() {
+  // Check Stripe feature flag first
+  if (!isStripeEnabled()) {
+    return NextResponse.json(
+      { error: "Billing portal is not available." },
+      { status: 501 }
+    );
+  }
+
   try {
     const supabase = await createClient();
     const {

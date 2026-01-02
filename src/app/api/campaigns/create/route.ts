@@ -26,9 +26,25 @@ export async function POST(request: Request) {
     } = body;
 
     // Validate required fields
-    if (!brandId || !productUrl || !preset) {
+    if (!brandId || !preset) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Missing required fields (brandId, preset)" },
+        { status: 400 }
+      );
+    }
+
+    // Validate product title
+    if (!productTitle || typeof productTitle !== "string" || !productTitle.trim()) {
+      return NextResponse.json(
+        { error: "Product title is required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate product images - at least one is required for the cutout pipeline
+    if (!productImages || !Array.isArray(productImages) || productImages.length === 0) {
+      return NextResponse.json(
+        { error: "At least one product image is required for generation" },
         { status: 400 }
       );
     }
@@ -65,6 +81,9 @@ export async function POST(request: Request) {
       );
     }
 
+    // Generate run_id for this generation attempt
+    const runId = crypto.randomUUID();
+
     // Create campaign
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: campaign, error: campaignError } = await (supabase
@@ -72,11 +91,11 @@ export async function POST(request: Request) {
       .insert({
         brand_id: brandId,
         owner_id: user.id,
-        product_url: productUrl,
-        product_title: productTitle || null,
+        product_url: productUrl || null,
+        product_title: productTitle.trim(),
         product_description: productDescription || null,
         product_price: productPrice || null,
-        product_images: productImages || [],
+        product_images: productImages,
         preset,
         status: "queued",
       })
@@ -91,10 +110,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create generation jobs
+    // Create generation jobs with new pipeline steps
+    // The cutout job will automatically queue backgrounds, which will queue composite
     const jobsToCreate = [
-      { campaign_id: campaign.id, step: "images", status: "queued" },
-      { campaign_id: campaign.id, step: "captions", status: "queued" },
+      { campaign_id: campaign.id, step: "cutout", status: "queued", run_id: runId },
+      { campaign_id: campaign.id, step: "captions", status: "queued", run_id: runId },
     ];
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -105,7 +125,7 @@ export async function POST(request: Request) {
     if (jobsError) {
       console.error("Jobs creation error:", jobsError);
       // Rollback campaign
-      await supabase.from("campaigns").delete().eq("id", campaign.id);
+      await (supabase.from("campaigns") as any).delete().eq("id", campaign.id);
       return NextResponse.json(
         { error: "Failed to queue generation jobs" },
         { status: 500 }

@@ -1,9 +1,16 @@
 import sharp from "sharp";
+import crypto from "crypto";
 
 interface CropResult {
   square: Buffer;
   portrait: Buffer;
   story: Buffer;
+}
+
+interface CompositeResult {
+  image: Buffer;
+  width: number;
+  height: number;
 }
 
 // Standard social media dimensions
@@ -133,4 +140,93 @@ export async function getImageDimensions(
     width: metadata.width || 0,
     height: metadata.height || 0,
   };
+}
+
+// ============================================================================
+// NEW FUNCTIONS FOR CUTOUT + COMPOSITE PIPELINE
+// ============================================================================
+
+/**
+ * Compute SHA-256 hash of an image buffer.
+ * Used for caching cutouts to avoid redundant background removal calls.
+ */
+export function hashImage(buffer: Buffer): string {
+  return crypto.createHash("sha256").update(buffer).digest("hex");
+}
+
+/**
+ * Composite a product cutout (PNG with transparency) onto a background image.
+ * The product is centered and scaled to ~60% of the background width.
+ *
+ * @param cutout - PNG buffer with transparent background (product cutout)
+ * @param background - JPEG/PNG buffer of the background scene
+ * @returns Composited image as JPEG buffer
+ */
+export async function compositeProductOnBackground(
+  cutout: Buffer,
+  background: Buffer
+): Promise<CompositeResult> {
+  // Get dimensions of both images
+  const bgMetadata = await sharp(background).metadata();
+  const cutoutMetadata = await sharp(cutout).metadata();
+
+  const bgWidth = bgMetadata.width || 1024;
+  const bgHeight = bgMetadata.height || 1024;
+  const cutoutWidth = cutoutMetadata.width || 512;
+  const cutoutHeight = cutoutMetadata.height || 512;
+
+  // Scale product to ~60% of background width while maintaining aspect ratio
+  const targetProductWidth = Math.round(bgWidth * 0.6);
+  const scaleFactor = targetProductWidth / cutoutWidth;
+  const targetProductHeight = Math.round(cutoutHeight * scaleFactor);
+
+  // Resize the cutout
+  const resizedCutout = await sharp(cutout)
+    .resize(targetProductWidth, targetProductHeight, {
+      fit: "inside",
+      withoutEnlargement: false,
+    })
+    .png() // Keep PNG for transparency
+    .toBuffer();
+
+  // Get the actual dimensions after resize
+  const resizedMeta = await sharp(resizedCutout).metadata();
+  const finalProductWidth = resizedMeta.width || targetProductWidth;
+  const finalProductHeight = resizedMeta.height || targetProductHeight;
+
+  // Calculate position to center the product
+  const left = Math.round((bgWidth - finalProductWidth) / 2);
+  const top = Math.round((bgHeight - finalProductHeight) / 2);
+
+  // Composite the cutout onto the background
+  const result = await sharp(background)
+    .composite([
+      {
+        input: resizedCutout,
+        left,
+        top,
+        blend: "over",
+      },
+    ])
+    .jpeg({ quality: 90 })
+    .toBuffer();
+
+  return {
+    image: result,
+    width: bgWidth,
+    height: bgHeight,
+  };
+}
+
+/**
+ * Download an image from a URL and return as Buffer.
+ * Used by worker to fetch cutouts and backgrounds from Supabase storage.
+ */
+export async function downloadImage(url: string): Promise<Buffer> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to download image: ${response.status}`);
+  }
+  const arrayBuffer = await response.arrayBuffer();
+  return Buffer.from(arrayBuffer);
 }

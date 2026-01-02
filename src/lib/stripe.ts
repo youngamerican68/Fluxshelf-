@@ -1,9 +1,13 @@
 import Stripe from "stripe";
 import type { SubscriptionPlan } from "@/types/database";
+import { isStripeEnabled } from "@/lib/flags";
 
 // Lazy initialization of Stripe client
 let _stripe: Stripe | null = null;
 export function getStripe(): Stripe {
+  if (!isStripeEnabled()) {
+    throw new Error("Stripe is not enabled. Set ENABLE_STRIPE=true to enable billing.");
+  }
   if (!_stripe) {
     if (!process.env.STRIPE_SECRET_KEY) {
       throw new Error("STRIPE_SECRET_KEY is not configured");
@@ -25,38 +29,45 @@ export const stripe = {
 };
 
 // Plan limits configuration
+// Note: Free tier uses lifetime window (1970-01-01 to 9999-12-31), not monthly
+// Paid tiers use calendar month window
 export const PLAN_LIMITS: Record<
   SubscriptionPlan,
   {
-    campaignsPerMonth: number;
+    campaignsPerMonth: number; // For free: lifetime limit, for paid: monthly limit
     regenerationsPerCampaign: number;
     displayName: string;
     price: number; // Monthly price in cents
+    isLifetime: boolean; // If true, campaignsPerMonth is lifetime limit
   }
 > = {
   free: {
-    campaignsPerMonth: 1,
-    regenerationsPerCampaign: 0,
+    campaignsPerMonth: 1, // 1 campaign LIFETIME
+    regenerationsPerCampaign: 2,
     displayName: "Free Trial",
     price: 0,
+    isLifetime: true,
   },
   starter: {
     campaignsPerMonth: 10,
     regenerationsPerCampaign: 2,
     displayName: "Starter",
     price: 2900, // $29/month
+    isLifetime: false,
   },
   pro: {
     campaignsPerMonth: 40,
     regenerationsPerCampaign: 2,
     displayName: "Pro",
     price: 7900, // $79/month
+    isLifetime: false,
   },
   agency: {
     campaignsPerMonth: 150,
     regenerationsPerCampaign: 2,
     displayName: "Agency",
     price: 19900, // $199/month
+    isLifetime: false,
   },
 };
 

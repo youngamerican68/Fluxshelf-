@@ -2,7 +2,7 @@
 
 ## Status: MVP Complete - Ready for Testing
 
-**Last Updated:** December 31, 2025
+**Last Updated:** January 1, 2026
 
 ---
 
@@ -88,6 +88,16 @@
 - [x] Final CTA and footer
 - [x] Fixed broken Unsplash image URLs
 
+### Phase 9: Image-to-Image & Enhanced Captions (Jan 1, 2026)
+- [x] FLUX Redux integration for image-to-image generation
+- [x] Product image passed from Shopify scrape to generation pipeline
+- [x] Fallback to FLUX Schnell for text-to-image when no image
+- [x] Platform-specific captions (Instagram, TikTok, Pinterest)
+- [x] UTM-tagged links with platform-specific tracking
+- [x] Posting schedule with day names and suggested dates
+- [x] Updated ZIP export with multi-platform CSV format
+- [x] Updated README in ZIP with platform tips
+
 ---
 
 ## Build Status
@@ -123,8 +133,8 @@
 - [x] Verify RLS policies are active
 
 ### External Service Setup
-- [ ] Configure fal.ai API key
-- [ ] Configure OpenRouter API key
+- [x] Configure fal.ai API key
+- [x] Configure OpenRouter API key
 - [ ] Create Stripe products and prices
 - [ ] Configure Stripe webhooks
 - [ ] Set up webhook endpoint in production

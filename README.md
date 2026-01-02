@@ -5,11 +5,13 @@ AI-powered marketing campaign generator for Shopify products. Paste a product UR
 ## Features
 
 - **Shopify Product Ingestion**: Automatically extract product title, description, price, and images from any Shopify product URL
+- **Product Image Upload**: Manual image upload fallback when scraping fails
 - **4 Style Presets**: Bright Minimal, Dark Moody, Outdoor Lifestyle, Studio Macro
-- **AI Image Generation**: Generate 12 unique product images using fal.ai's Flux Pro model
-- **Caption Generation**: 7-day social media caption schedule with hooks, CTAs, and hashtags
+- **AI Image Generation**: Generate 12 unique product images using cutout + composite pipeline for high fidelity
+- **Caption Generation**: 21 social captions (7 days × 3 platforms: Instagram, TikTok, Pinterest) with UTM tracking
 - **Multi-format Export**: Download zip with 3 aspect ratios (Square 1080x1080, Portrait 1080x1350, Story 1080x1920)
-- **Subscription Billing**: Stripe-powered subscriptions with quota enforcement
+- **Subscription Billing**: Optional Stripe-powered subscriptions (can be disabled via feature flag)
+- **Quota Enforcement**: Free tier (1 campaign lifetime, 2 regenerations), paid tiers reset monthly
 - **Job Queue**: Asynchronous generation with progress tracking
 
 ## Tech Stack
@@ -59,7 +61,11 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
-# Stripe
+# Feature Flags
+# Set to "true" to enable Stripe billing (default: false = billing disabled)
+ENABLE_STRIPE=false
+
+# Stripe (only required if ENABLE_STRIPE=true)
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
@@ -93,6 +99,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 1. Go to SQL Editor in your Supabase dashboard
 2. Run the contents of `supabase/migrations/001_initial_schema.sql`
 3. Run the contents of `supabase/migrations/002_storage_buckets.sql`
+4. Run the contents of `supabase/migrations/003_cutouts_triggers_quota.sql`
 
 #### Enable Auth
 1. Go to Authentication > Providers
@@ -208,20 +215,30 @@ Note: Vercel cron requires a paid plan. Alternatively, use an external cron serv
 
 ### Job Processing
 
-1. Campaign creation queues `images` and `captions` jobs
+1. Campaign creation queues `cutout` and `captions` jobs
 2. Worker claims one job at a time using "skip locked" semantics
-3. Each job type has its own processor
+3. Pipeline: `cutout` → `backgrounds` → `composite` (chained automatically)
 4. Jobs retry up to 3 times on failure
 5. Campaign status updates based on job completion
+6. Intermediate backgrounds are cleaned up after composite
+
+### Image Generation Pipeline
+
+1. **Cutout**: Remove background from product image (cached by hash)
+2. **Backgrounds**: Generate 12 lifestyle backgrounds using Flux Schnell
+3. **Composite**: Place product cutout on each background using Sharp
+4. **Export**: Create 3 aspect ratio variants per image
 
 ### Quota Enforcement
 
-- Free: 1 campaign total (ever)
-- Starter: 10 campaigns/month
-- Pro: 40 campaigns/month
-- Agency: 150 campaigns/month
+| Plan | Campaigns | Regenerations | Period |
+|------|-----------|---------------|--------|
+| Free | 1 | 2 per campaign | Lifetime |
+| Starter | 10 | 2 per campaign | Monthly |
+| Pro | 40 | 2 per campaign | Monthly |
+| Agency | 150 | 2 per campaign | Monthly |
 
-Quotas reset at the start of each calendar month.
+Free tier never resets. Paid tiers reset at the start of each calendar month.
 
 ## API Routes
 
@@ -229,11 +246,12 @@ Quotas reset at the start of each calendar month.
 |-------|--------|-------------|
 | `/api/ingest-product` | POST | Fetch Shopify product data |
 | `/api/campaigns/create` | POST | Create new campaign |
+| `/api/campaigns/[id]/regenerate` | POST | Regenerate campaign images |
 | `/api/campaigns/[id]/zip` | POST | Generate export zip |
 | `/api/worker/run` | POST | Process queued jobs |
-| `/api/billing/checkout` | POST | Create Stripe checkout |
-| `/api/billing/portal` | POST | Access Stripe portal |
-| `/api/webhooks/stripe` | POST | Stripe webhook handler |
+| `/api/billing/checkout` | POST | Create Stripe checkout (requires ENABLE_STRIPE=true) |
+| `/api/billing/portal` | POST | Access Stripe portal (requires ENABLE_STRIPE=true) |
+| `/api/webhooks/stripe` | POST | Stripe webhook handler (requires ENABLE_STRIPE=true) |
 
 ## Admin
 

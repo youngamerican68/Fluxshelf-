@@ -19,6 +19,7 @@ import type { SubscriptionPlan } from "@/types/database";
 interface BillingActionsProps {
   currentPlan: SubscriptionPlan;
   stripeCustomerId: string | null;
+  stripeEnabled?: boolean;
 }
 
 const UPGRADE_PLANS: Array<{
@@ -34,11 +35,17 @@ const UPGRADE_PLANS: Array<{
 export function BillingActions({
   currentPlan,
   stripeCustomerId,
+  stripeEnabled = true,
 }: BillingActionsProps) {
   const [loading, setLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>("starter");
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  // If Stripe is disabled, don't show any billing actions
+  if (!stripeEnabled) {
+    return null;
+  }
 
   const availablePlans = UPGRADE_PLANS.filter((p) => {
     const order = { free: 0, starter: 1, pro: 2, agency: 3 };

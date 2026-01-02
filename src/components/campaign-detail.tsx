@@ -41,6 +41,7 @@ interface CampaignDetailProps {
   captions: Tables<"generated_captions">[];
   jobs: Tables<"generation_jobs">[];
   downloadUrl: string;
+  regenerationsRemaining: number;
 }
 
 function getJobStatusIcon(status: string) {
@@ -63,11 +64,13 @@ export function CampaignDetail({
   captions,
   jobs,
   downloadUrl: initialDownloadUrl,
+  regenerationsRemaining,
 }: CampaignDetailProps) {
   const [selectedImages, setSelectedImages] = useState<Set<string>>(
     new Set(images.filter((img) => img.is_favorite).map((img) => img.id))
   );
   const [generating, setGenerating] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState(initialDownloadUrl);
   const router = useRouter();
   const { toast } = useToast();
@@ -77,6 +80,37 @@ export function CampaignDetail({
   const completedJobs = jobs.filter((j) => j.status === "succeeded").length;
   const totalJobs = jobs.length;
   const progress = totalJobs > 0 ? (completedJobs / totalJobs) * 100 : 0;
+
+  const handleRegenerate = async () => {
+    setRegenerating(true);
+    try {
+      const response = await fetch(`/api/campaigns/${campaign.id}/regenerate`, {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to regenerate");
+      }
+
+      toast({
+        title: "Regeneration started",
+        description: `New images are being generated. ${data.remaining} regeneration${data.remaining !== 1 ? "s" : ""} remaining.`,
+      });
+
+      router.refresh();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Failed to regenerate",
+        variant: "destructive",
+      });
+    } finally {
+      setRegenerating(false);
+    }
+  };
 
   const toggleFavorite = async (imageId: string) => {
     const newSelected = new Set(selectedImages);
@@ -173,17 +207,35 @@ export function CampaignDetail({
             </p>
           </div>
         </div>
-        <Badge
-          variant={
-            campaign.status === "ready"
-              ? "success"
-              : campaign.status === "failed"
-                ? "destructive"
-                : "warning"
-          }
-        >
-          {campaign.status}
-        </Badge>
+        <div className="flex items-center gap-3">
+          {(campaign.status === "ready" || campaign.status === "failed") &&
+            regenerationsRemaining > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRegenerate}
+                disabled={regenerating}
+              >
+                {regenerating ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                )}
+                Regenerate ({regenerationsRemaining} left)
+              </Button>
+            )}
+          <Badge
+            variant={
+              campaign.status === "ready"
+                ? "success"
+                : campaign.status === "failed"
+                  ? "destructive"
+                  : "warning"
+            }
+          >
+            {campaign.status}
+          </Badge>
+        </div>
       </div>
 
       {/* Progress Card (while processing) */}

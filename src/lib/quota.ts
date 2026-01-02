@@ -12,11 +12,22 @@ interface QuotaStatus {
   regenerationsLimit: number;
 }
 
+// Lifetime period for free tier (never resets)
+const LIFETIME_PERIOD = {
+  start: new Date("1970-01-01"),
+  end: new Date("9999-12-31"),
+};
+
 function getCurrentPeriod(): { start: Date; end: Date } {
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), 1);
   const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
   return { start, end };
+}
+
+function getPeriodForPlan(plan: SubscriptionPlan): { start: Date; end: Date } {
+  const limits = PLAN_LIMITS[plan];
+  return limits.isLifetime ? LIFETIME_PERIOD : getCurrentPeriod();
 }
 
 function formatDate(date: Date): string {
@@ -25,7 +36,6 @@ function formatDate(date: Date): string {
 
 export async function checkCampaignQuota(userId: string): Promise<QuotaStatus> {
   const supabase = await createClient();
-  const { start, end } = getCurrentPeriod();
 
   // Get user's subscription
   interface Subscription {
@@ -42,7 +52,10 @@ export async function checkCampaignQuota(userId: string): Promise<QuotaStatus> {
     subscription?.status === "active" ? subscription.plan : "free";
   const limits = PLAN_LIMITS[plan];
 
-  // Get or create usage ledger for current period
+  // Use lifetime period for free tier, monthly for paid
+  const { start, end } = getPeriodForPlan(plan);
+
+  // Get or create usage ledger for the period
   interface Usage {
     campaigns_used: number;
     regenerations_used: number;
@@ -59,9 +72,10 @@ export async function checkCampaignQuota(userId: string): Promise<QuotaStatus> {
   const regenerationsUsed = usage?.regenerations_used || 0;
 
   if (campaignsUsed >= limits.campaignsPerMonth) {
+    const periodText = limits.isLifetime ? "your free trial" : "this month";
     return {
       allowed: false,
-      reason: `You've used all ${limits.campaignsPerMonth} campaigns for this month. Upgrade your plan to generate more.`,
+      reason: `You've used all ${limits.campaignsPerMonth} campaign${limits.campaignsPerMonth !== 1 ? "s" : ""} for ${periodText}. Upgrade your plan to generate more.`,
       plan,
       campaignsUsed,
       campaignsLimit: limits.campaignsPerMonth,
@@ -85,7 +99,6 @@ export async function checkRegenerationQuota(
   campaignId: string
 ): Promise<QuotaStatus> {
   const supabase = await createClient();
-  const { start, end } = getCurrentPeriod();
 
   // Get user's subscription
   interface Subscription {
@@ -101,6 +114,9 @@ export async function checkRegenerationQuota(
   const plan: SubscriptionPlan =
     subscription?.status === "active" ? subscription.plan : "free";
   const limits = PLAN_LIMITS[plan];
+
+  // Use lifetime period for free tier, monthly for paid
+  const { start, end } = getPeriodForPlan(plan);
 
   // Get campaign regeneration count
   interface Campaign {
@@ -151,7 +167,23 @@ export async function checkRegenerationQuota(
 
 export async function incrementCampaignUsage(userId: string): Promise<void> {
   const supabase = await createClient();
-  const { start, end } = getCurrentPeriod();
+
+  // Get user's subscription to determine period
+  interface Subscription {
+    plan: SubscriptionPlan;
+    status: string;
+  }
+  const { data: subscription } = await (supabase
+    .from("subscriptions") as any)
+    .select("plan, status")
+    .eq("owner_id", userId)
+    .single() as { data: Subscription | null };
+
+  const plan: SubscriptionPlan =
+    subscription?.status === "active" ? subscription.plan : "free";
+
+  // Use lifetime period for free tier, monthly for paid
+  const { start, end } = getPeriodForPlan(plan);
 
   // Upsert usage ledger
   interface ExistingUsage {

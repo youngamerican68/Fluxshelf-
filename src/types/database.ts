@@ -9,7 +9,7 @@ export type Json =
 export type BrandAssetType = "product_image" | "logo" | "moodboard";
 export type CampaignStatus = "draft" | "queued" | "generating" | "ready" | "failed";
 export type JobStatus = "queued" | "running" | "succeeded" | "failed";
-export type JobStep = "images" | "captions" | "zip";
+export type JobStep = "images" | "captions" | "zip" | "cutout" | "backgrounds" | "composite";
 export type SubscriptionPlan = "free" | "starter" | "pro" | "agency";
 export type StylePreset = "bright_minimal" | "dark_moody" | "outdoor_lifestyle" | "studio_macro";
 
@@ -92,6 +92,7 @@ export interface Database {
           preset: StylePreset;
           status: CampaignStatus;
           regeneration_count: number;
+          cutout_path: string | null;
           created_at: string;
         };
         Insert: {
@@ -106,6 +107,7 @@ export interface Database {
           preset: StylePreset;
           status?: CampaignStatus;
           regeneration_count?: number;
+          cutout_path?: string | null;
           created_at?: string;
         };
         Update: {
@@ -120,6 +122,7 @@ export interface Database {
           preset?: StylePreset;
           status?: CampaignStatus;
           regeneration_count?: number;
+          cutout_path?: string | null;
           created_at?: string;
         };
       };
@@ -132,6 +135,7 @@ export interface Database {
           attempts: number;
           last_error: string | null;
           locked_at: string | null;
+          run_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -143,6 +147,7 @@ export interface Database {
           attempts?: number;
           last_error?: string | null;
           locked_at?: string | null;
+          run_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -154,6 +159,7 @@ export interface Database {
           attempts?: number;
           last_error?: string | null;
           locked_at?: string | null;
+          run_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -162,6 +168,7 @@ export interface Database {
         Row: {
           id: string;
           campaign_id: string;
+          run_id: string | null;
           index: number;
           storage_path: string;
           thumb_path: string | null;
@@ -173,6 +180,7 @@ export interface Database {
         Insert: {
           id?: string;
           campaign_id: string;
+          run_id?: string | null;
           index: number;
           storage_path: string;
           thumb_path?: string | null;
@@ -184,6 +192,7 @@ export interface Database {
         Update: {
           id?: string;
           campaign_id?: string;
+          run_id?: string | null;
           index?: number;
           storage_path?: string;
           thumb_path?: string | null;
@@ -304,6 +313,64 @@ export interface Database {
           period_end?: string;
           campaigns_used?: number;
           regenerations_used?: number;
+        };
+      };
+      product_cutouts: {
+        Row: {
+          id: string;
+          image_hash: string;
+          storage_path: string;
+          width: number | null;
+          height: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          image_hash: string;
+          storage_path: string;
+          width?: number | null;
+          height?: number | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          image_hash?: string;
+          storage_path?: string;
+          width?: number | null;
+          height?: number | null;
+          created_at?: string;
+        };
+      };
+      generated_backgrounds: {
+        Row: {
+          id: string;
+          campaign_id: string;
+          run_id: string;
+          index: number;
+          storage_path: string;
+          prompt: string | null;
+          seed: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          campaign_id: string;
+          run_id: string;
+          index: number;
+          storage_path: string;
+          prompt?: string | null;
+          seed?: number | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          campaign_id?: string;
+          run_id?: string;
+          index?: number;
+          storage_path?: string;
+          prompt?: string | null;
+          seed?: number | null;
+          created_at?: string;
         };
       };
     };

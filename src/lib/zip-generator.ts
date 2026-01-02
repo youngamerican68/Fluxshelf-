@@ -9,10 +9,19 @@ interface ImageFile {
 
 interface Caption {
   day: number;
-  caption: string;
-  hashtags: string;
-  cta: string;
+  day_name: string;
+  suggested_date: string;
   suggested_time: string;
+  instagram_caption: string;
+  instagram_hashtags: string;
+  tiktok_caption: string;
+  pinterest_caption: string;
+  pinterest_hashtags: string;
+  cta: string;
+  utm_link_instagram: string;
+  utm_link_tiktok: string;
+  utm_link_pinterest: string;
+  product_url_raw: string;
 }
 
 interface ProductMeta {
@@ -69,16 +78,40 @@ export async function generateCampaignZip(
 }
 
 function generateCaptionsCSV(captions: Caption[]): string {
-  const headers = ["day", "caption", "hashtags", "cta", "suggested_time"];
+  const headers = [
+    "day",
+    "day_name",
+    "suggested_date",
+    "suggested_time",
+    "instagram_caption",
+    "instagram_hashtags",
+    "tiktok_caption",
+    "pinterest_caption",
+    "pinterest_hashtags",
+    "cta",
+    "product_url_raw",
+    "utm_link_instagram",
+    "utm_link_tiktok",
+    "utm_link_pinterest",
+  ];
   const rows = [headers.join(",")];
 
   for (const caption of captions) {
     const row = [
       caption.day.toString(),
-      escapeCSV(caption.caption),
-      escapeCSV(caption.hashtags),
-      escapeCSV(caption.cta),
+      escapeCSV(caption.day_name),
+      escapeCSV(caption.suggested_date),
       escapeCSV(caption.suggested_time),
+      escapeCSV(caption.instagram_caption),
+      escapeCSV(caption.instagram_hashtags),
+      escapeCSV(caption.tiktok_caption),
+      escapeCSV(caption.pinterest_caption),
+      escapeCSV(caption.pinterest_hashtags),
+      escapeCSV(caption.cta),
+      escapeCSV(caption.product_url_raw),
+      escapeCSV(caption.utm_link_instagram),
+      escapeCSV(caption.utm_link_tiktok),
+      escapeCSV(caption.utm_link_pinterest),
     ];
     rows.push(row.join(","));
   }
@@ -108,18 +141,38 @@ Folder Structure:
   /story_1080x1920/     - Story format for Instagram/Facebook Stories
 
 /captions/
-  captions.csv          - 7-day caption schedule with hashtags and CTAs
+  captions.csv          - 7-day multi-platform caption schedule
 
 /meta/
   product.json          - Original product data
 
-Usage Tips:
------------
+Caption CSV Columns:
+--------------------
+- day, day_name, suggested_date, suggested_time
+- instagram_caption, instagram_hashtags (20-30 hashtags)
+- tiktok_caption (short, punchy, 300 chars max)
+- pinterest_caption, pinterest_hashtags (SEO-focused)
+- cta, utm_link_instagram, utm_link_tiktok, utm_link_pinterest
+
+Platform-Specific Tips:
+-----------------------
+INSTAGRAM: Use the full caption + hashtags block. Post at suggested times.
+TIKTOK: Keep it short and conversational. Hashtags are integrated.
+PINTEREST: Focus on SEO keywords. Pin descriptions drive discovery.
+
+Image Format Tips:
+------------------
 1. Square images work best for Instagram grid posts
 2. Portrait images maximize screen real estate on mobile feeds
 3. Story images are optimized for Instagram/Facebook Stories
-4. Use the suggested posting times as a starting guide
-5. Customize hashtags based on your specific niche
+
+UTM Tracking:
+-------------
+Each platform link includes UTM parameters for analytics:
+- utm_source: instagram, tiktok, or pinterest
+- utm_medium: social
+- utm_campaign: fluxshield
+- utm_content: day1, day2, etc.
 
 IMPORTANT NOTICE:
 -----------------
