@@ -109,10 +109,10 @@ export default async function DashboardPage() {
             Manage your brands and campaigns
           </p>
         </div>
-        <Link href="/app/brands/new">
+        <Link href="/app/campaigns/new">
           <Button>
             <Plus className="mr-2 h-4 w-4" />
-            New Brand
+            Create Campaign
           </Button>
         </Link>
       </div>
@@ -176,7 +176,7 @@ export default async function DashboardPage() {
                   >
                     <div>
                       <p className="font-medium">
-                        {brand.name || "Unnamed Brand"}
+                        {brand.name || "My Brand"}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         Created{" "}
@@ -190,9 +190,12 @@ export default async function DashboardPage() {
             ) : (
               <div className="text-center py-8">
                 <Palette className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground mb-4">No brands yet</p>
+                <p className="text-muted-foreground mb-2">No brands yet</p>
+                <p className="text-sm text-muted-foreground mb-4">
+                  A default brand will be created when you make your first campaign
+                </p>
                 <Link href="/app/brands/new">
-                  <Button>Create Your First Brand</Button>
+                  <Button variant="outline" size="sm">Set Up Brand (Optional)</Button>
                 </Link>
               </div>
             )}
@@ -221,7 +224,7 @@ export default async function DashboardPage() {
                         {campaign.product_title || "Untitled Campaign"}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {campaign.brands?.name || "No brand"}
+                        {campaign.brands?.name || "My Brand"}
                       </p>
                     </div>
                     <Badge variant={getStatusVariant(campaign.status)}>
@@ -233,10 +236,10 @@ export default async function DashboardPage() {
             ) : (
               <div className="text-center py-8">
                 <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">No campaigns yet</p>
-                <p className="text-sm text-muted-foreground">
-                  Create a brand first to start generating campaigns
-                </p>
+                <p className="text-muted-foreground mb-4">No campaigns yet</p>
+                <Link href="/app/campaigns/new">
+                  <Button>Create Your First Campaign</Button>
+                </Link>
               </div>
             )}
           </CardContent>

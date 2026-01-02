@@ -16,13 +16,12 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { FileUploader } from "@/components/file-uploader";
 import { ColorPicker } from "@/components/color-picker";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export default function NewBrandPage() {
   const [name, setName] = useState("");
   const [colors, setColors] = useState<string[]>([]);
-  const [productImage, setProductImage] = useState<File | null>(null);
   const [logo, setLogo] = useState<File | null>(null);
   const [moodboardImages, setMoodboardImages] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
@@ -32,16 +31,6 @@ export default function NewBrandPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!productImage) {
-      toast({
-        title: "Product image required",
-        description: "Please upload at least one product image",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -62,20 +51,6 @@ export default function NewBrandPage() {
         .single();
 
       if (brandError) throw brandError;
-
-      // Upload product image
-      const productPath = `${user.id}/brands/${brand.id}/assets/product_${Date.now()}.${productImage.name.split(".").pop()}`;
-      const { error: productUploadError } = await supabase.storage
-        .from("fluxshield")
-        .upload(productPath, productImage);
-
-      if (productUploadError) throw productUploadError;
-
-      await (supabase.from("brand_assets") as any).insert({
-        brand_id: brand.id,
-        type: "product_image",
-        storage_path: productPath,
-      });
 
       // Upload logo if provided
       if (logo) {
@@ -141,32 +116,21 @@ export default function NewBrandPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Create a New Brand</CardTitle>
+          <CardTitle>Set Up Your Brand (Optional)</CardTitle>
           <CardDescription>
-            Upload your brand assets to generate consistent marketing campaigns
+            Add brand assets for consistent styling across campaigns. You can
+            skip this and create a campaign directly.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="name">Brand Name (optional)</Label>
+              <Label htmlFor="name">Brand Name</Label>
               <Input
                 id="name"
                 placeholder="My Awesome Brand"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Product Image *</Label>
-              <p className="text-sm text-muted-foreground mb-2">
-                Upload a product-on-white or main product image
-              </p>
-              <FileUploader
-                accept="image/*"
-                maxFiles={1}
-                onFilesChange={(files) => setProductImage(files[0] || null)}
               />
             </div>
 
@@ -196,10 +160,18 @@ export default function NewBrandPage() {
               <ColorPicker colors={colors} onChange={setColors} />
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Brand
-            </Button>
+            <div className="flex flex-col gap-3">
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save Brand
+              </Button>
+              <Link href="/app/campaigns/new" className="w-full">
+                <Button type="button" variant="outline" className="w-full">
+                  Skip for now
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
           </form>
         </CardContent>
       </Card>

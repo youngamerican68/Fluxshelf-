@@ -15,9 +15,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/components/ui/use-toast";
 import { ProductImageUploader } from "@/components/product-image-uploader";
+import { FileUploader } from "@/components/file-uploader";
+import { ColorPicker } from "@/components/color-picker";
 import {
   Loader2,
   ArrowLeft,
@@ -29,6 +36,8 @@ import {
   CheckCircle,
   AlertCircle,
   Edit2,
+  ChevronDown,
+  Palette,
 } from "lucide-react";
 import type { StylePreset } from "@/types/database";
 
@@ -66,7 +75,7 @@ const PRESETS: Array<{
 
 function NewCampaignContent() {
   const searchParams = useSearchParams();
-  const brandId = searchParams.get("brandId");
+  const brandIdParam = searchParams.get("brandId");
   const [productUrl, setProductUrl] = useState("");
   const [preset, setPreset] = useState<StylePreset>("bright_minimal");
   const [loading, setLoading] = useState(false);
@@ -80,9 +89,14 @@ function NewCampaignContent() {
   const [productImages, setProductImages] = useState<string[]>([]);
   const [isEditing, setIsEditing] = useState(false);
 
-  const [brand, setBrand] = useState<{ id: string; name: string | null } | null>(
-    null
-  );
+  // Brand selection/creation
+  const [selectedBrandId, setSelectedBrandId] = useState<string | null>(brandIdParam);
+  const [existingBrands, setExistingBrands] = useState<Array<{ id: string; name: string | null }>>([]);
+  const [brandSectionOpen, setBrandSectionOpen] = useState(false);
+
+  // New brand fields (for inline brand creation)
+  const [brandColors, setBrandColors] = useState<string[]>([]);
+
   const router = useRouter();
   const { toast } = useToast();
   const supabase = createClient();
@@ -91,17 +105,22 @@ function NewCampaignContent() {
   const hasProductData = productTitle.trim() && productImages.length > 0;
 
   useEffect(() => {
-    const fetchBrand = async () => {
-      if (!brandId) return;
+    const fetchBrands = async () => {
       const { data } = await supabase
         .from("brands")
         .select("id, name")
-        .eq("id", brandId)
-        .single();
-      setBrand(data);
+        .order("created_at", { ascending: false });
+      if (data) {
+        const brands = data as Array<{ id: string; name: string | null }>;
+        setExistingBrands(brands);
+        // If we have a brandId param, select it
+        if (brandIdParam && brands.find(b => b.id === brandIdParam)) {
+          setSelectedBrandId(brandIdParam);
+        }
+      }
     };
-    fetchBrand();
-  }, [brandId, supabase]);
+    fetchBrands();
+  }, [brandIdParam, supabase]);
 
   const handleIngestProduct = async () => {
     if (!productUrl) {
@@ -165,15 +184,6 @@ function NewCampaignContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!brandId) {
-      toast({
-        title: "Brand required",
-        description: "Please select a brand first",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (!productTitle.trim()) {
       toast({
         title: "Product title required",
@@ -199,7 +209,8 @@ function NewCampaignContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          brandId,
+          brandId: selectedBrandId || null, // Optional - API will create default if not provided
+          brandColors: brandColors.length > 0 ? brandColors : null, // For default brand creation
           productUrl: productUrl || null,
           productTitle: productTitle.trim(),
           productDescription: productDescription.trim() || null,
@@ -233,42 +244,16 @@ function NewCampaignContent() {
     }
   };
 
-  if (!brandId) {
-    return (
-      <div className="max-w-2xl mx-auto">
-        <Link
-          href="/app"
-          className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Dashboard
-        </Link>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Select a Brand First</CardTitle>
-            <CardDescription>
-              You need to select a brand before creating a campaign
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/app">
-              <Button>Go to Dashboard</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const selectedBrand = existingBrands.find(b => b.id === selectedBrandId);
 
   return (
     <div className="max-w-2xl mx-auto">
       <Link
-        href={`/app/brands/${brandId}`}
+        href="/app"
         className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to {brand?.name || "Brand"}
+        Back to Dashboard
       </Link>
 
       <Card>
@@ -439,6 +424,78 @@ function NewCampaignContent() {
                 ))}
               </RadioGroup>
             </div>
+
+            {/* Brand Section (Optional) */}
+            <Collapsible open={brandSectionOpen} onOpenChange={setBrandSectionOpen}>
+              <CollapsibleTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-between"
+                >
+                  <span className="flex items-center gap-2">
+                    <Palette className="h-4 w-4" />
+                    Brand Settings (Optional)
+                    {selectedBrand && (
+                      <span className="text-muted-foreground">
+                        — {selectedBrand.name || "Unnamed Brand"}
+                      </span>
+                    )}
+                  </span>
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${
+                      brandSectionOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-4 space-y-4">
+                {/* Existing Brand Selection */}
+                {existingBrands.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Select Existing Brand</Label>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        variant={selectedBrandId === null ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSelectedBrandId(null)}
+                      >
+                        New Brand
+                      </Button>
+                      {existingBrands.map((brand) => (
+                        <Button
+                          key={brand.id}
+                          type="button"
+                          variant={selectedBrandId === brand.id ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setSelectedBrandId(brand.id)}
+                        >
+                          {brand.name || "Unnamed Brand"}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Brand Colors - only show if creating new brand */}
+                {!selectedBrandId && (
+                  <div className="space-y-2">
+                    <Label>Brand Colors</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Add colors to influence the generated backgrounds
+                    </p>
+                    <ColorPicker colors={brandColors} onChange={setBrandColors} />
+                  </div>
+                )}
+
+                <p className="text-xs text-muted-foreground">
+                  {selectedBrandId
+                    ? "Using existing brand settings for color consistency."
+                    : "A default brand will be created with these settings."}
+                </p>
+              </CollapsibleContent>
+            </Collapsible>
 
             {/* Disclaimer */}
             <div className="rounded-lg border border-dashed p-4 flex items-start gap-3">
