@@ -115,6 +115,23 @@
 - [x] Node.js runtime for worker + ZIP routes (Sharp/JSZip compatibility)
 - [x] Migration 003 applied (cutouts, triggers, quota RPCs)
 
+### Phase 11: Merged Brand/Campaign Flow (Jan 1, 2026)
+- [x] Campaign creation no longer requires brand first
+- [x] Auto-create "My Brand" if user doesn't select one
+- [x] Brand section is optional collapsible accordion on campaign page
+- [x] Brand page removes required product image (products belong to campaigns)
+- [x] Dashboard primary CTA changed from "New Brand" to "Create Campaign"
+- [x] Added "Skip for now" link on brand page
+- [x] Added Collapsible UI component (`@radix-ui/react-collapsible`)
+
+**New User Flow:**
+1. Sign up → Dashboard
+2. Click "Create Campaign" (primary CTA)
+3. Paste Shopify URL → Fetch product data
+4. Select style preset
+5. (Optional) Expand "Brand Settings" accordion
+6. Click "Generate Campaign"
+
 ---
 
 ## To Be Implemented (Lightweight)
