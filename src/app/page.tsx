@@ -468,9 +468,9 @@ export default function LandingPage() {
               </div>
               <div className="space-y-1 text-gray-300">
                 <p>📁 images/</p>
-                <p className="pl-4">📁 square_1080x1080/ <span className="text-gray-500">(12 images)</span></p>
-                <p className="pl-4">📁 portrait_1080x1350/ <span className="text-gray-500">(12 images)</span></p>
-                <p className="pl-4">📁 story_1080x1920/ <span className="text-gray-500">(12 images)</span></p>
+                <p className="pl-4">📁 square_1080x1080/ <span className="text-gray-500">(18 images)</span></p>
+                <p className="pl-4">📁 portrait_1080x1350/ <span className="text-gray-500">(18 images)</span></p>
+                <p className="pl-4">📁 story_1080x1920/ <span className="text-gray-500">(18 images)</span></p>
                 <p>📁 captions/</p>
                 <p className="pl-4">📄 captions.csv <span className="text-gray-500">(7 posts)</span></p>
                 <p>📁 meta/</p>
@@ -491,8 +491,8 @@ export default function LandingPage() {
               <p className="text-primary-foreground/80">Average generation time</p>
             </div>
             <div>
-              <p className="text-4xl font-bold mb-2">12 images</p>
-              <p className="text-primary-foreground/80">Per campaign</p>
+              <p className="text-4xl font-bold mb-2">18 images</p>
+              <p className="text-primary-foreground/80">Per campaign (12 lifestyle + 6 marketplace)</p>
             </div>
             <div>
               <p className="text-4xl font-bold mb-2">3 formats</p>

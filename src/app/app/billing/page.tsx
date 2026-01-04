@@ -236,7 +236,7 @@ export default async function BillingPage() {
           <div>
             <h4 className="font-medium">What counts as a campaign?</h4>
             <p className="text-sm text-muted-foreground">
-              A campaign is one generation of 12 images + 7 captions for a
+              A campaign is one generation of 18 images (12 lifestyle + 6 marketplace-ready) + 7 captions for a
               single product.
             </p>
           </div>
@@ -244,7 +244,7 @@ export default async function BillingPage() {
             <h4 className="font-medium">Can I regenerate a campaign?</h4>
             <p className="text-sm text-muted-foreground">
               Paid plans include 2 regenerations per campaign. Each regeneration
-              creates 12 new images.
+              creates 18 new images.
             </p>
           </div>
           <div>

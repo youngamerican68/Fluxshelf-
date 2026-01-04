@@ -8,6 +8,8 @@ import {
   hashImage,
   compositeProductOnBackground,
   downloadImage,
+  generateAllWhiteBackgrounds,
+  WHITE_BACKGROUND_CONFIGS,
 } from "@/lib/image-processing";
 import type { Database, StylePreset } from "@/types/database";
 
@@ -284,9 +286,11 @@ async function processBackgroundsJob(
 
   const brandColors = (brand?.color_palette as string[]) || [];
 
-  // Generate 12 backgrounds one at a time to avoid timeout
+  // =========================================================================
+  // PART 1: Generate 12 lifestyle backgrounds (AI-generated)
+  // =========================================================================
   for (let index = 0; index < 12; index++) {
-    console.log(`Generating background ${index + 1}/12...`);
+    console.log(`Generating lifestyle background ${index + 1}/12...`);
 
     const result = await generateBackground({
       preset: campaign.preset as StylePreset,
@@ -312,7 +316,7 @@ async function processBackgroundsJob(
       "image/jpeg"
     );
 
-    // Store in generated_backgrounds table
+    // Store in generated_backgrounds table with background_type metadata
     await (supabase.from("generated_backgrounds") as any).insert({
       campaign_id: campaign.id,
       run_id: job.run_id,
@@ -328,6 +332,46 @@ async function processBackgroundsJob(
     }
   }
 
+  // =========================================================================
+  // PART 2: Generate 6 marketplace-compliant white backgrounds (programmatic)
+  // =========================================================================
+  console.log("Generating 6 marketplace-compliant white backgrounds...");
+
+  const whiteBackgrounds = await generateAllWhiteBackgrounds(1024, 1024);
+
+  for (const whiteBg of whiteBackgrounds) {
+    const whiteIndex = 12 + whiteBg.index; // Index 12-17 for white backgrounds
+    console.log(`Storing white background ${whiteBg.index + 1}/6 (index ${whiteIndex})...`);
+
+    // Store background in Supabase storage
+    const bgPath = getStoragePath(
+      campaign.owner_id,
+      "campaigns",
+      campaign.id,
+      `backgrounds/bg_${whiteIndex}.jpg`
+    );
+
+    await uploadFile(
+      campaign.owner_id,
+      bgPath.replace(`${campaign.owner_id}/`, ""),
+      whiteBg.buffer,
+      "image/jpeg"
+    );
+
+    // Get the config for this white background
+    const config = WHITE_BACKGROUND_CONFIGS[whiteBg.index];
+
+    // Store in generated_backgrounds table
+    await (supabase.from("generated_backgrounds") as any).insert({
+      campaign_id: campaign.id,
+      run_id: job.run_id,
+      index: whiteIndex,
+      storage_path: bgPath,
+      prompt: `Marketplace white background: ${config.name} - ${config.description}`,
+      seed: null,
+    });
+  }
+
   // Queue the composite job
   await (supabase.from("generation_jobs") as any).insert({
     campaign_id: campaign.id,
@@ -335,7 +379,7 @@ async function processBackgroundsJob(
     run_id: job.run_id,
   });
 
-  console.log("Backgrounds job complete, composite job queued");
+  console.log("Backgrounds job complete (12 lifestyle + 6 white), composite job queued");
 }
 
 // ============================================================================
@@ -378,9 +422,11 @@ async function processCompositeJob(
     throw new Error("No backgrounds found for composite");
   }
 
-  // Composite each background with the cutout
+  // Composite each background with the cutout (12 lifestyle + 6 white = 18 total)
   for (const bg of backgrounds) {
-    console.log(`Compositing image ${bg.index + 1}/12...`);
+    const totalBgs = backgrounds.length;
+    const bgNum = backgrounds.indexOf(bg) + 1;
+    console.log(`Compositing image ${bgNum}/${totalBgs} (index ${bg.index})...`);
 
     // Download background from storage
     const { data: bgData } = await supabase.storage

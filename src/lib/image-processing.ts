@@ -230,3 +230,211 @@ export async function downloadImage(url: string): Promise<Buffer> {
   const arrayBuffer = await response.arrayBuffer();
   return Buffer.from(arrayBuffer);
 }
+
+// ============================================================================
+// MARKETPLACE-COMPLIANT WHITE BACKGROUNDS (Programmatic, no AI cost)
+// ============================================================================
+
+/**
+ * White background variations for marketplace compliance.
+ * Amazon, Walmart, etc. require clean white backgrounds.
+ */
+export type WhiteBackgroundStyle =
+  | "pure_white"
+  | "soft_gray_gradient"
+  | "off_white"
+  | "white_vignette"
+  | "light_neutral"
+  | "subtle_gradient";
+
+interface WhiteBackgroundConfig {
+  style: WhiteBackgroundStyle;
+  name: string;
+  description: string;
+}
+
+export const WHITE_BACKGROUND_CONFIGS: WhiteBackgroundConfig[] = [
+  {
+    style: "pure_white",
+    name: "Pure White",
+    description: "Amazon-compliant pure white (#FFFFFF)",
+  },
+  {
+    style: "soft_gray_gradient",
+    name: "Soft Gray Gradient",
+    description: "Subtle top-to-bottom gray gradient",
+  },
+  {
+    style: "off_white",
+    name: "Off White",
+    description: "Warm off-white background (#FAFAFA)",
+  },
+  {
+    style: "white_vignette",
+    name: "White Vignette",
+    description: "White with soft edge vignette",
+  },
+  {
+    style: "light_neutral",
+    name: "Light Neutral",
+    description: "Very light gray (#F5F5F5)",
+  },
+  {
+    style: "subtle_gradient",
+    name: "Subtle Radial",
+    description: "White with subtle radial gradient from center",
+  },
+];
+
+/**
+ * Generate a marketplace-compliant white/neutral background programmatically.
+ * No AI cost - uses Sharp to create clean backgrounds.
+ *
+ * @param style - The style of white background to generate
+ * @param width - Width of the background (default 1024)
+ * @param height - Height of the background (default 1024)
+ * @returns JPEG buffer of the background
+ */
+export async function generateWhiteBackground(
+  style: WhiteBackgroundStyle,
+  width: number = 1024,
+  height: number = 1024
+): Promise<Buffer> {
+  switch (style) {
+    case "pure_white":
+      // Pure white (#FFFFFF) - Amazon compliant
+      return sharp({
+        create: {
+          width,
+          height,
+          channels: 3,
+          background: { r: 255, g: 255, b: 255 },
+        },
+      })
+        .jpeg({ quality: 95 })
+        .toBuffer();
+
+    case "soft_gray_gradient": {
+      // Create a subtle top-to-bottom gradient (white to light gray)
+      // Using SVG for gradient
+      const gradientSvg = `
+        <svg width="${width}" height="${height}">
+          <defs>
+            <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style="stop-color:#FFFFFF"/>
+              <stop offset="100%" style="stop-color:#F0F0F0"/>
+            </linearGradient>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#grad)"/>
+        </svg>
+      `;
+      return sharp(Buffer.from(gradientSvg))
+        .resize(width, height)
+        .jpeg({ quality: 95 })
+        .toBuffer();
+    }
+
+    case "off_white":
+      // Warm off-white (#FAFAFA)
+      return sharp({
+        create: {
+          width,
+          height,
+          channels: 3,
+          background: { r: 250, g: 250, b: 250 },
+        },
+      })
+        .jpeg({ quality: 95 })
+        .toBuffer();
+
+    case "white_vignette": {
+      // White with soft edge vignette using radial gradient
+      const vignetteSvg = `
+        <svg width="${width}" height="${height}">
+          <defs>
+            <radialGradient id="vignette" cx="50%" cy="50%" r="70%">
+              <stop offset="0%" style="stop-color:#FFFFFF"/>
+              <stop offset="100%" style="stop-color:#E8E8E8"/>
+            </radialGradient>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#vignette)"/>
+        </svg>
+      `;
+      return sharp(Buffer.from(vignetteSvg))
+        .resize(width, height)
+        .jpeg({ quality: 95 })
+        .toBuffer();
+    }
+
+    case "light_neutral":
+      // Very light gray (#F5F5F5)
+      return sharp({
+        create: {
+          width,
+          height,
+          channels: 3,
+          background: { r: 245, g: 245, b: 245 },
+        },
+      })
+        .jpeg({ quality: 95 })
+        .toBuffer();
+
+    case "subtle_gradient": {
+      // White with subtle radial gradient from center (studio spotlight effect)
+      const radialSvg = `
+        <svg width="${width}" height="${height}">
+          <defs>
+            <radialGradient id="spotlight" cx="50%" cy="45%" r="60%">
+              <stop offset="0%" style="stop-color:#FFFFFF"/>
+              <stop offset="100%" style="stop-color:#F8F8F8"/>
+            </radialGradient>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#spotlight)"/>
+        </svg>
+      `;
+      return sharp(Buffer.from(radialSvg))
+        .resize(width, height)
+        .jpeg({ quality: 95 })
+        .toBuffer();
+    }
+
+    default:
+      // Fallback to pure white
+      return sharp({
+        create: {
+          width,
+          height,
+          channels: 3,
+          background: { r: 255, g: 255, b: 255 },
+        },
+      })
+        .jpeg({ quality: 95 })
+        .toBuffer();
+  }
+}
+
+/**
+ * Generate all 6 marketplace-compliant white backgrounds.
+ *
+ * @param width - Width of each background
+ * @param height - Height of each background
+ * @returns Array of background buffers with metadata
+ */
+export async function generateAllWhiteBackgrounds(
+  width: number = 1024,
+  height: number = 1024
+): Promise<Array<{ buffer: Buffer; style: WhiteBackgroundStyle; index: number }>> {
+  const results: Array<{ buffer: Buffer; style: WhiteBackgroundStyle; index: number }> = [];
+
+  for (let i = 0; i < WHITE_BACKGROUND_CONFIGS.length; i++) {
+    const config = WHITE_BACKGROUND_CONFIGS[i];
+    const buffer = await generateWhiteBackground(config.style, width, height);
+    results.push({
+      buffer,
+      style: config.style,
+      index: i,
+    });
+  }
+
+  return results;
+}

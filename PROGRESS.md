@@ -2,9 +2,10 @@
 
 ## Status: MVP Hardened - Ready for First Revenue
 
-**Last Updated:** January 1, 2026
+**Last Updated:** January 4, 2026
 
-**Current Pipeline:** Cutout + Composite (background removal → lifestyle backgrounds → Sharp composite)
+**Current Pipeline:** Cutout + Composite (background removal → lifestyle backgrounds + white backgrounds → Sharp composite)
+**Output:** 18 images per campaign (12 lifestyle + 6 marketplace-compliant white)
 **Billing:** Stripe disabled by default (`ENABLE_STRIPE=false`), free tier: 1 campaign lifetime, 2 regenerations
 
 ---
@@ -132,6 +133,16 @@
 5. (Optional) Expand "Brand Settings" accordion
 6. Click "Generate Campaign"
 
+### Phase 12: Marketplace-Compliant White Backgrounds (Jan 4, 2026)
+- [x] Added 6 programmatic white/neutral background styles (no AI cost)
+- [x] Pure white (#FFFFFF) - Amazon compliant
+- [x] Soft gray gradient, off-white, vignette, light neutral, subtle radial
+- [x] Worker generates 12 lifestyle + 6 white = 18 total backgrounds
+- [x] Same composite pipeline handles all 18 images
+- [x] White backgrounds stored with descriptive prompts in metadata
+
+**Output per campaign:** 18 images (12 lifestyle + 6 marketplace-ready white backgrounds)
+
 ---
 
 ## To Be Implemented (Lightweight)
@@ -163,6 +174,31 @@
 - `src/app/api/campaigns/create/route.ts` - Copy first product image to storage
 - `src/app/api/worker/run/route.ts` - Prefer `source_image_path` over CDN URL
 - Migration - Add `source_image_path TEXT` to campaigns table
+
+---
+
+## Future Roadmap
+
+### Phase 13: Auto-QC / "De-AI-fy" Filter
+**Problem:** AI-generated images sometimes have artifacts (hands, text, shadows).
+
+**Solution:** Add automated quality check loop:
+- Use cheap vision model to detect likely failures
+- Auto-flag problematic images
+- Auto-regenerate only the bad ones
+- Show QC status to user
+
+### Phase 14: Marketplace Crop Presets
+**Problem:** Different platforms have different image requirements.
+
+**Solution:** Add marketplace-specific crop presets:
+- Amazon (85% product fill, white background, 1:1)
+- Etsy (4:3 landscape, lifestyle preferred)
+- Walmart (1:1, white background)
+- eBay (1:1, clean background)
+- Shopify (various aspect ratios)
+
+**Crops per platform:** ~10 total sizes (vs current 3)
 
 ---
 

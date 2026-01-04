@@ -482,7 +482,7 @@ export function CampaignDetail({
                   <label htmlFor="favorites-only" className="text-sm">
                     {selectedImages.size > 0
                       ? `Include ${selectedImages.size} favorite image${selectedImages.size !== 1 ? "s" : ""}`
-                      : "Include all 12 images (select favorites to limit)"}
+                      : "Include all images (select favorites to limit)"}
                   </label>
                 </div>
 
