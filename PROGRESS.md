@@ -200,6 +200,26 @@
 
 **Crops per platform:** ~10 total sizes (vs current 3)
 
+### Phase 15: Buffer Integration (Auto-Scheduling)
+**Problem:** Users manually download ZIP and upload to social platforms.
+
+**Solution:** Integrate with Buffer API for one-click scheduling:
+- OAuth flow to connect user's Buffer account
+- "Schedule to Buffer" button on campaign detail page
+- Push 7 posts (images + captions) to Buffer queue
+- Auto-space posts (1 per day)
+- Supports Instagram, TikTok, Pinterest via Buffer
+
+**Implementation:**
+- Buffer OAuth (store access token per user)
+- API endpoint to push campaign to Buffer
+- Settings page to manage Buffer connection
+- Handle image upload to Buffer's media API
+
+**User requirements:**
+- Buffer account (free tier: 3 channels)
+- Social accounts connected in Buffer
+
 ---
 
 ## Build Status
