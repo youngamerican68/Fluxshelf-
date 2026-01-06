@@ -69,7 +69,7 @@ const PRICING = [
     price: "$0",
     period: "",
     campaigns: "1 campaign",
-    features: ["12 AI-generated images", "7 social captions", "3 aspect ratios"],
+    features: ["18 images (12 lifestyle + 6 white)", "7 social captions", "3 aspect ratios"],
     cta: "Start Free",
     popular: false,
   },
@@ -81,7 +81,7 @@ const PRICING = [
     features: [
       "Everything in Free",
       "All style presets",
-      "Priority generation",
+      "Amazon-ready white backgrounds",
     ],
     cta: "Get Started",
     popular: false,
@@ -91,7 +91,7 @@ const PRICING = [
     price: "$79",
     period: "/month",
     campaigns: "40 campaigns/mo",
-    features: ["Everything in Starter", "Faster generation", "Email support"],
+    features: ["Everything in Starter", "Priority generation", "Email support"],
     cta: "Go Pro",
     popular: true,
   },
@@ -149,12 +149,16 @@ export default function LandingPage() {
       <section className="py-20 md:py-28">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium mb-6">
+              <Check className="h-4 w-4" />
+              Your exact product, not AI&apos;s interpretation
+            </div>
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 text-gray-900">
-              Turn any Shopify product into
-              <span className="text-primary"> a week of content</span>
+              Product photos that look like
+              <span className="text-primary"> your product</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Paste a product URL. Get 12 lifestyle photos and 7 ready-to-post captions with hashtags. Download everything in 5 minutes.
+              Most AI tools alter your product. FluxShield extracts it perfectly and places it in lifestyle scenes. Get 18 images + 7 captions—including 6 Amazon-ready white backgrounds.
             </p>
             <div className="flex flex-wrap justify-center gap-4 mb-12">
               <Link href="/signup">
@@ -233,6 +237,59 @@ export default function LandingPage() {
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Why FluxShield - Differentiator Section */}
+      <section className="py-20 bg-gray-900 text-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <p className="text-primary font-semibold text-sm mb-2 uppercase tracking-wider">Why FluxShield</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Not just another AI image generator
+            </h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              Generic AI tools generate pretty images—but they change your product. FluxShield is built for e-commerce sellers who need accuracy.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+              <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center mb-4">
+                <Check className="h-6 w-6 text-green-400" />
+              </div>
+              <h3 className="text-lg font-bold mb-2">Your Exact Product</h3>
+              <p className="text-gray-400 text-sm mb-4">
+                We extract your product with pixel-perfect accuracy and composite it onto backgrounds. Labels, text, and details stay intact.
+              </p>
+              <div className="text-xs text-gray-500 border-t border-gray-700 pt-4">
+                <span className="text-red-400">Others:</span> AI redraws your product, often changing labels and geometry
+              </div>
+            </div>
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+              <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center mb-4">
+                <Package className="h-6 w-6 text-blue-400" />
+              </div>
+              <h3 className="text-lg font-bold mb-2">Marketplace-Ready</h3>
+              <p className="text-gray-400 text-sm mb-4">
+                Every campaign includes 6 pure white backgrounds that meet Amazon, Walmart, and eBay requirements. No extra work needed.
+              </p>
+              <div className="text-xs text-gray-500 border-t border-gray-700 pt-4">
+                <span className="text-red-400">Others:</span> Only lifestyle images—you still need white backgrounds separately
+              </div>
+            </div>
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+              <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mb-4">
+                <FileText className="h-6 w-6 text-purple-400" />
+              </div>
+              <h3 className="text-lg font-bold mb-2">Complete Campaign Kit</h3>
+              <p className="text-gray-400 text-sm mb-4">
+                Not just images—get 7 days of captions with hooks, hashtags, and UTM-tracked links. One ZIP, ready to post.
+              </p>
+              <div className="text-xs text-gray-500 border-t border-gray-700 pt-4">
+                <span className="text-red-400">Others:</span> Images only—you write captions yourself
               </div>
             </div>
           </div>
@@ -343,7 +400,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Feature 3: 12 Lifestyle Shots */}
+      {/* Feature 3: 18 Product Shots (12 Lifestyle + 6 Marketplace) */}
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
@@ -353,21 +410,36 @@ export default function LandingPage() {
                 Step 3
               </div>
               <h3 className="text-3xl font-bold mb-4 text-gray-900">
-                Get 12 lifestyle product shots
+                Get 18 product shots in every pack
               </h3>
               <p className="text-lg text-muted-foreground mb-6">
-                Our AI generates 12 unique lifestyle images featuring your product in different scenes, angles, and compositions. Each image is crafted to stop the scroll.
+                Your exact product—extracted and composited onto 12 lifestyle scenes plus 6 marketplace-ready white backgrounds. Labels and details stay perfect.
               </p>
-              <div className="grid grid-cols-3 gap-3 mb-6">
-                {["Hero shot", "45° angle", "Flat lay", "Lifestyle", "Close-up", "In context"].map((type) => (
-                  <div key={type} className="bg-gray-100 rounded-lg px-3 py-2 text-xs font-medium text-gray-600 text-center">
-                    {type}
+              <div className="space-y-4 mb-6">
+                <div className="bg-gray-50 rounded-lg p-4 border">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                    <span className="font-semibold text-sm">12 Lifestyle Scenes</span>
                   </div>
-                ))}
+                  <div className="grid grid-cols-3 gap-2">
+                    {["Hero shot", "Flat lay", "In context", "Close-up", "45° angle", "Styled"].map((type) => (
+                      <div key={type} className="bg-white rounded px-2 py-1 text-xs text-gray-600 text-center border">
+                        {type}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span className="font-semibold text-sm text-green-800">6 Marketplace-Ready</span>
+                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Amazon, Walmart, eBay</span>
+                  </div>
+                  <p className="text-xs text-green-700">
+                    Pure white backgrounds that meet marketplace requirements. No extra editing needed.
+                  </p>
+                </div>
               </div>
-              <p className="text-sm text-muted-foreground">
-                + 6 more scene variations in every campaign
-              </p>
             </div>
             <div className="grid grid-cols-3 gap-3">
               {[
@@ -560,10 +632,10 @@ export default function LandingPage() {
       <section className="py-24 bg-gray-50">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-            Ready to generate your first campaign?
+            Product photos that actually look like your product
           </h2>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Stop spending hours on product photography and caption writing. Get a full week of content in 5 minutes.
+            18 images, 7 captions, marketplace-ready white backgrounds—all from one Shopify URL. Your product, perfectly preserved.
           </p>
           <Link href="/signup">
             <Button size="lg" className="font-semibold px-8 py-6 text-base">
